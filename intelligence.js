@@ -517,7 +517,8 @@ app.post('/intelligence-report/generate', async (req, res) => {
         // Build download URL using the request's host
         const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
         const host = req.headers['x-forwarded-host'] || req.headers['host'];
-        const url = `${protocol}://${host}/intelligence-report/download/${pdfId}`;
+        const basePath = process.env.BASE_PATH || '/apps/intelligence-report';
+        const url = `${protocol}://${host}${basePath}/intelligence-report/download/${pdfId}`;
 
         // Cleanup session
         sessionStore.delete(sessionId);
