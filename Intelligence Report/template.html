@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{REPORT_TITLE}} — Intelligence Report</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --surface: #ffffff;
+      --surface-alt: #f1f3f5;
+      --text: #0d1117;
+      --text-secondary: #4a5568;
+      --text-muted: #718096;
+      --border: #e2e8f0;
+      --border-light: #edf2f7;
+
+      /* Classification colors */
+      --ts-red: #dc2626;
+      --ts-bg: #fef2f2;
+      --secret-orange: #ea580c;
+      --secret-bg: #fff7ed;
+      --conf-blue: #2563eb;
+      --conf-bg: #eff6ff;
+      --fouo-green: #16a34a;
+      --fouo-bg: #f0fdf4;
+      --unclass-grey: #64748b;
+      --unclass-bg: #f8fafc;
+
+      /* Threat levels */
+      --critical: #dc2626;
+      --critical-bg: #fef2f2;
+      --high: #ea580c;
+      --high-bg: #fff7ed;
+      --moderate: #d97706;
+      --moderate-bg: #fffbeb;
+      --low: #16a34a;
+      --low-bg: #f0fdf4;
+
+      /* Design system */
+      --navy: #0c1929;
+      --navy-mid: #1a2d47;
+      --navy-light: #2a4365;
+      --accent: #3b82f6;
+      --accent-light: #dbeafe;
+      --gold: #b8860b;
+      --gold-light: #fef3cd;
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      font-size: 13px;
+    }
+
+    /* ═══════════════════════════════════════════
+       CLASSIFICATION BANNER
+    ═══════════════════════════════════════════ */
+    .classification-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      z-index: 2000;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .classification-banner.top-secret { background: var(--ts-red); color: white; }
+    .classification-banner.secret { background: var(--secret-orange); color: white; }
+    .classification-banner.confidential { background: var(--conf-blue); color: white; }
+    .classification-banner.fouo { background: var(--fouo-green); color: white; }
+    .classification-banner.unclassified { background: var(--unclass-grey); color: white; }
+
+    .classification-banner-bottom {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      z-index: 2000;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .classification-banner-bottom.top-secret { background: var(--ts-red); color: white; }
+    .classification-banner-bottom.secret { background: var(--secret-orange); color: white; }
+    .classification-banner-bottom.confidential { background: var(--conf-blue); color: white; }
+    .classification-banner-bottom.fouo { background: var(--fouo-green); color: white; }
+    .classification-banner-bottom.unclassified { background: var(--unclass-grey); color: white; }
+
+    /* ═══════════════════════════════════════════
+       PAGE HEADER BAR
+    ═══════════════════════════════════════════ */
+    .page-header-bar {
+      position: fixed;
+      top: 28px; left: 0; right: 0;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      background: var(--navy);
+      border-bottom: 2px solid var(--accent);
+      z-index: 1500;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page-header-bar .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .page-header-bar .logo-area img {
+      height: 28px;
+      object-fit: contain;
+    }
+    .page-header-bar .org-name {
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .page-header-bar .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+      font-weight: 500;
+    }
+    .page-header-bar .header-right .date-badge {
+      padding: 3px 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* ═══════════════════════════════════════════
+       WATERMARK
+    ═══════════════════════════════════════════ */
+    .watermark {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) rotate(-35deg);
+      font-size: 80px;
+      font-weight: 900;
+      letter-spacing: 12px;
+      color: rgba(0,0,0,0.025);
+      z-index: 1;
+      pointer-events: none;
+      white-space: nowrap;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE STRUCTURE
+    ═══════════════════════════════════════════ */
+    .page-container {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      padding-top: 76px;
+      padding-bottom: 24px;
+      position: relative;
+    }
+
+    .page-wrapper {
+      padding: 32px 28px 60px;
+      min-height: calc(100vh - 52px);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      page-break-inside: avoid;
+    }
+
+    .page-number {
+      position: absolute;
+      bottom: 30px;
+      left: 28px;
+      right: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .page-number .section-ref {
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ═══════════════════════════════════════════
+       COVER PAGE
+    ═══════════════════════════════════════════ */
+    .cover-hero {
+      background: linear-gradient(160deg, var(--navy) 0%, var(--navy-mid) 45%, var(--navy-light) 100%);
+      border-radius: var(--radius-lg);
+      padding: 56px 48px 48px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .cover-hero::before {
+      content: '';
+      position: absolute;
+      top: -40%; right: -15%;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+    }
+    .cover-hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--gold), var(--accent));
+    }
+
+    .cover-classification {
+      display: inline-block;
+      padding: 5px 16px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .cover-classification.top-secret { background: rgba(220,38,38,0.2); border: 1px solid rgba(220,38,38,0.4); color: #fca5a5; }
+    .cover-classification.secret { background: rgba(234,88,12,0.2); border: 1px solid rgba(234,88,12,0.4); color: #fdba74; }
+    .cover-classification.confidential { background: rgba(37,99,235,0.2); border: 1px solid rgba(37,99,235,0.4); color: #93c5fd; }
+    .cover-classification.fouo { background: rgba(22,163,74,0.2); border: 1px solid rgba(22,163,74,0.4); color: #86efac; }
+    .cover-classification.unclassified { background: rgba(100,116,139,0.2); border: 1px solid rgba(100,116,139,0.4); color: #cbd5e1; }
+
+    .cover-hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .cover-hero .subtitle {
+      font-size: 16px;
+      font-weight: 400;
+      opacity: 0.75;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .cover-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .cover-meta-item {
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.04);
+    }
+    .cover-meta-item .meta-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 4px;
+    }
+    .cover-meta-item .meta-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* ═══════════════════════════════════════════
+       CARDS & SECTIONS
+    ═══════════════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-dark {
+      background: var(--navy);
+      color: white;
+      border: none;
+    }
+
+    .section-eyebrow {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .card-dark .section-eyebrow { color: var(--accent); }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+    .card-dark .section-title { color: white; }
+
+    .section-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+    .card-dark .section-desc { color: rgba(255,255,255,0.6); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border-light);
+      margin: 24px 0;
+    }
+
+    /* ═══════════════════════════════════════════
+       THREAT LEVEL BADGES
+    ═══════════════════════════════════════════ */
+    .threat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .threat-badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+    .threat-badge.critical { background: var(--critical-bg); color: var(--critical); }
+    .threat-badge.critical::before { background: var(--critical); }
+    .threat-badge.high { background: var(--high-bg); color: var(--high); }
+    .threat-badge.high::before { background: var(--high); }
+    .threat-badge.moderate { background: var(--moderate-bg); color: var(--moderate); }
+    .threat-badge.moderate::before { background: var(--moderate); }
+    .threat-badge.low { background: var(--low-bg); color: var(--low); }
+    .threat-badge.low::before { background: var(--low); }
+
+    /* ═══════════════════════════════════════════
+       CONFIDENCE BADGES
+    ═══════════════════════════════════════════ */
+    .conf-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .conf-badge.high-conf { background: #dbeafe; color: #1d4ed8; }
+    .conf-badge.moderate-conf { background: #fef3c7; color: #92400e; }
+    .conf-badge.low-conf { background: #fee2e2; color: #991b1b; }
+
+    /* ═══════════════════════════════════════════
+       TABLES
+    ═══════════════════════════════════════════ */
+    .intel-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 12px;
+    }
+    .intel-table thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: white;
+      background: var(--navy);
+      border-bottom: 2px solid var(--accent);
+    }
+    .intel-table thead th:first-child { border-radius: var(--radius) 0 0 0; }
+    .intel-table thead th:last-child { border-radius: 0 var(--radius) 0 0; }
+
+    .intel-table tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-light);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    .intel-table tbody tr:last-child td { border-bottom: none; }
+    .intel-table tbody tr:nth-child(even) { background: var(--surface-alt); }
+
+    /* ═══════════════════════════════════════════
+       EXECUTIVE SUMMARY BOX
+    ═══════════════════════════════════════════ */
+    .exec-summary-box {
+      background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .exec-summary-box h4 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .exec-summary-box p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.75;
+    }
+
+    /* ═══════════════════════════════════════════
+       KEY FINDINGS / STAT CARDS
+    ═══════════════════════════════════════════ */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-light);
+      text-align: center;
+    }
+    .stat-card .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-card .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .stat-card.critical-stat .stat-value { color: var(--critical); }
+    .stat-card.high-stat .stat-value { color: var(--high); }
+    .stat-card.moderate-stat .stat-value { color: var(--moderate); }
+    .stat-card.low-stat .stat-value { color: var(--low); }
+    .stat-card.accent-stat .stat-value { color: var(--accent); }
+
+    /* ═══════════════════════════════════════════
+       IMAGE CARDS (Satellite / Evidence)
+    ═══════════════════════════════════════════ */
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .image-card {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .image-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+    }
+    .image-card .image-caption {
+      padding: 12px 14px;
+    }
+    .image-card .image-caption .caption-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .image-card .image-caption .caption-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .image-card .image-caption .caption-type {
+      display: inline-block;
+      padding: 2px 6px;
+      background: var(--navy);
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-radius: 3px;
+      margin-top: 6px;
+    }
+
+    .image-full {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .image-full img {
+      width: 100%;
+      max-height: 320px;
+      object-fit: cover;
+      display: block;
+    }
+    .image-full .image-caption {
+      padding: 12px 16px;
+      background: var(--surface);
+    }
+
+    /* ═══════════════════════════════════════════
+       INDICATOR LISTS
+    ═══════════════════════════════════════════ */
+    .indicator-list {
+      list-style: none;
+      margin-bottom: 24px;
+    }
+    .indicator-list li {
+      padding: 8px 0 8px 20px;
+      position: relative;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .indicator-list li:last-child { border-bottom: none; }
+    .indicator-list li::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 14px;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+    .indicator-list li.critical-ind::before { background: var(--critical); }
+    .indicator-list li.high-ind::before { background: var(--high); }
+
+    /* ═══════════════════════════════════════════
+       SCENARIO MATRIX
+    ═══════════════════════════════════════════ */
+    .scenario-row {
+      display: grid;
+      grid-template-columns: 100px 1fr 120px 120px;
+      gap: 12px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-light);
+      align-items: center;
+    }
+    .scenario-row:last-child { border-bottom: none; }
+    .scenario-row .horizon {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .scenario-row .scenario-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ═══════════════════════════════════════════
+       PRIORITY ACTIONS
+    ═══════════════════════════════════════════ */
+    .action-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .action-item:last-child { border-bottom: none; }
+    .action-num {
+      width: 28px; height: 28px;
+      min-width: 28px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+    .action-content h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .action-content p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════
+       TWO COLUMN LAYOUT
+    ═══════════════════════════════════════════ */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ═══════════════════════════════════════════
+       ASSESSMENT BOX
+    ═══════════════════════════════════════════ */
+    .assessment-box {
+      padding: 20px 24px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+    }
+    .assessment-box.critical-box {
+      background: var(--critical-bg);
+      border-left: 4px solid var(--critical);
+    }
+    .assessment-box.high-box {
+      background: var(--high-bg);
+      border-left: 4px solid var(--high);
+    }
+    .assessment-box.moderate-box {
+      background: var(--moderate-bg);
+      border-left: 4px solid var(--moderate);
+    }
+    .assessment-box.low-box {
+      background: var(--low-bg);
+      border-left: 4px solid var(--low);
+    }
+    .assessment-box.accent-box {
+      background: var(--accent-light);
+      border-left: 4px solid var(--accent);
+    }
+    .assessment-box h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .assessment-box p {
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+
+    /* ═══════════════════════════════════════════
+       SOURCES & REFERENCES
+    ═══════════════════════════════════════════ */
+    .source-item {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 12px;
+    }
+    .source-item:last-child { border-bottom: none; }
+    .source-num {
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 24px;
+    }
+    .source-text {
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .source-text a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* ═══════════════════════════════════════════
+       VULNERABILITY CARD
+    ═══════════════════════════════════════════ */
+    .vuln-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .vuln-card .vuln-header {
+      padding: 10px 14px;
+      background: var(--navy);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .vuln-card .vuln-body {
+      padding: 14px;
+    }
+    .vuln-card .vuln-body img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .vuln-card .vuln-detail {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .vuln-card .vuln-detail strong {
+      color: var(--text);
+    }
+
+    /* ═══════════════════════════════════════════
+       ANALYST CALLOUT
+    ═══════════════════════════════════════════ */
+    .analyst-callout {
+      background: var(--navy);
+      color: white;
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .analyst-callout h4 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .analyst-callout p {
+      font-size: 13px;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* ═══════════════════════════════════════════
+       SUB HEADINGS
+    ═══════════════════════════════════════════ */
+    .sub-heading {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border-light);
+    }
+
+    /* ═══════════════════════════════════════════
+       PRINT
+    ═══════════════════════════════════════════ */
+    @media print {
+      body { background: white; }
+      .page-container { max-width: none; margin: 0; padding-top: 76px; }
+      .page-wrapper {
+        page-break-after: always;
+        height: 100vh;
+        padding: 32px 28px 60px;
+        margin: 0;
+      }
+      .page-wrapper:last-child { page-break-after: avoid; }
+      .classification-banner, .classification-banner-bottom, .page-header-bar, .watermark {
+        position: fixed !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .card { border: 1px solid #ddd; box-shadow: none; break-inside: avoid; }
+      .cover-hero, .analyst-callout, .card-dark, .intel-table thead th,
+      .action-num, .vuln-card .vuln-header, .threat-badge, .conf-badge,
+      .stat-card, .exec-summary-box, .assessment-box, .cover-classification,
+      .cover-meta-item {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- CLASSIFICATION BANNERS -->
+  <div class="classification-banner {{CLASSIFICATION_CLASS}}">{{CLASSIFICATION}}</div>
+  <div class="classification-banner-bottom {{CLASSIFICATION_CLASS}}">{{CLASSIFICATION}}</div>
+
+  <!-- WATERMARK -->
+  <div class="watermark">{{CLASSIFICATION}}</div>
+
+  <!-- HEADER BAR -->
+  <div class="page-header-bar">
+    <div class="logo-area">
+      {{#if LOGO}}<img src="{{LOGO}}" alt="On Demand">{{/if}}
+      <span class="org-name">ON DEMAND INTELLIGENCE</span>
+    </div>
+    <div class="header-right">
+      <span>{{REPORT_ID}}</span>
+      <span class="date-badge">{{REPORT_DATE}}</span>
+    </div>
+  </div>
+
+  <div class="page-container">
+    {{#each PAGES}}
+    <div class="page-wrapper">
+
+      <!-- ╔═══════════════════════════════════╗
+           ║        COVER PAGE                 ║
+           ╚═══════════════════════════════════╝ -->
+      {{#if is_cover_page}}
+      <div class="cover-hero">
+        <div class="cover-classification {{../CLASSIFICATION_CLASS}}">{{../CLASSIFICATION}}</div>
+        <h1>{{../REPORT_TITLE}}</h1>
+        <div class="subtitle">{{../REPORT_SUBTITLE}}</div>
+        <div class="cover-meta-grid">
+          <div class="cover-meta-item">
+            <div class="meta-label">Report ID</div>
+            <div class="meta-value">{{../REPORT_ID}}</div>
+          </div>
+          <div class="cover-meta-item">
+            <div class="meta-label">Date</div>
+            <div class="meta-value">{{../REPORT_DATE}}</div>
+          </div>
+          <div class="cover-meta-item">
+            <div class="meta-label">Classification</div>
+            <div class="meta-value">{{../CLASSIFICATION}}</div>
+          </div>
+          <div class="cover-meta-item">
+            <div class="meta-label">Update Cadence</div>
+            <div class="meta-value">{{../UPDATE_CADENCE}}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Executive Summary -->
+      {{#if executive_summary}}
+      <div class="exec-summary-box">
+        <h4>Executive Summary</h4>
+        <p>{{{safe executive_summary}}}</p>
+      </div>
+      {{/if}}
+
+      <!-- Key Stats -->
+      {{#if stats}}
+      <div class="stat-row">
+        {{#each stats}}
+        <div class="stat-card {{stat_class}}">
+          <div class="stat-value">{{value}}</div>
+          <div class="stat-label">{{label}}</div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      <!-- Cover Image -->
+      {{#if cover_image}}
+      <div class="image-full">
+        <img src="{{cover_image.url}}" alt="{{cover_image.caption}}">
+        <div class="image-caption">
+          <div class="caption-title">{{cover_image.caption}}</div>
+          {{#if cover_image.source}}<div class="caption-meta">Source: {{cover_image.source}}</div>{{/if}}
+        </div>
+      </div>
+      {{/if}}
+      {{/if}}
+
+      <!-- ╔═══════════════════════════════════╗
+           ║     THREAT MATRIX PAGE            ║
+           ╚═══════════════════════════════════╝ -->
+      {{#if is_threat_matrix_page}}
+      <div class="card">
+        <div class="section-eyebrow">Threat Assessment</div>
+        <div class="section-title">{{section_title}}</div>
+        <div class="section-desc">{{section_desc}}</div>
+
+        <table class="intel-table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Threat Level</th>
+              <th>Vector</th>
+              <th>Status</th>
+              <th>Key Concerns</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each threat_rows}}
+            <tr>
+              <td style="font-weight:700;">{{domain}}</td>
+              <td>{{{safe threat_badge_html}}}</td>
+              <td>{{vector}}</td>
+              <td>{{status}}</td>
+              <td>{{concerns}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+
+      {{#if key_indicators}}
+      <div class="card">
+        <div class="section-eyebrow">Key Indicators</div>
+        <div class="sub-heading">Watch List (Next {{indicator_horizon}})</div>
+        <ul class="indicator-list">
+          {{#each key_indicators}}
+          <li class="{{indicator_class}}">{{{safe text}}}</li>
+          {{/each}}
+        </ul>
+      </div>
+      {{/if}}
+      {{/if}}
+
+      <!-- ╔═══════════════════════════════════╗
+           ║     ANALYSIS SECTION PAGE         ║
+           ╚═══════════════════════════════════╝ -->
+      {{#if is_analysis_page}}
+      <div class="card">
+        <div class="section-eyebrow">{{section_eyebrow}}</div>
+        <div class="section-title">{{section_title}}</div>
+        <div class="section-desc">{{section_desc}}</div>
+
+        <!-- Assessment Confidence -->
+        {{#if assessment_confidence}}
+        <div style="margin-bottom: 20px;">
+          <span style="font-size:11px;font-weight:600;color:var(--text-muted);margin-right:8px;">Assessment confidence:</span>
+          {{{safe assessment_confidence_html}}}
+        </div>
+        {{/if}}
+
+        <!-- Analysis Table -->
+        {{#if analysis_table}}
+        <table class="intel-table">
+          <thead>
+            <tr>
+              {{#each analysis_table.headers}}
+              <th>{{this}}</th>
+              {{/each}}
+            </tr>
+          </thead>
+          <tbody>
+            {{#each analysis_table.rows}}
+            <tr>
+              {{#each cells}}
+              <td>{{{safe this}}}</td>
+              {{/each}}
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+        {{/if}}
+
+        <!-- Analysis Text Content -->
+        {{#if analysis_text}}
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.75;margin-bottom:20px;">
+          {{{safe analysis_text}}}
+        </div>
+        {{/if}}
+      </div>
+
+      <!-- Satellite / Evidence Images -->
+      {{#if images}}
+      <div class="image-grid">
+        {{#each images}}
+        <div class="image-card">
+          <img src="{{url}}" alt="{{caption}}">
+          <div class="image-caption">
+            <div class="caption-title">{{caption}}</div>
+            {{#if meta}}<div class="caption-meta">{{meta}}</div>{{/if}}
+            {{#if type}}<span class="caption-type">{{type}}</span>{{/if}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      <!-- Vulnerability Cards -->
+      {{#if vulnerability_cards}}
+      <div class="two-col">
+        {{#each vulnerability_cards}}
+        <div class="vuln-card">
+          <div class="vuln-header">
+            <span>{{title}}</span>
+            {{{safe threat_badge_html}}}
+          </div>
+          <div class="vuln-body">
+            {{#if image_url}}<img src="{{image_url}}" alt="{{title}}">{{/if}}
+            <div class="vuln-detail">{{{safe details}}}</div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      <!-- Analyst Assessment -->
+      {{#if analyst_assessment}}
+      <div class="analyst-callout">
+        <h4>Analyst Assessment</h4>
+        <p>{{{safe analyst_assessment}}}</p>
+      </div>
+      {{/if}}
+      {{/if}}
+
+      <!-- ╔═══════════════════════════════════╗
+           ║     SCENARIO / OUTLOOK PAGE       ║
+           ╚═══════════════════════════════════╝ -->
+      {{#if is_scenario_page}}
+      <div class="card">
+        <div class="section-eyebrow">Predictive Outlook</div>
+        <div class="section-title">{{section_title}}</div>
+        <div class="section-desc">{{section_desc}}</div>
+
+        {{#if scenarios}}
+        <div class="sub-heading">Scenario Matrix</div>
+        <table class="intel-table">
+          <thead>
+            <tr>
+              <th>Horizon</th>
+              <th>Most Likely</th>
+              <th>Escalation Risk</th>
+              <th>Decision Triggers</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each scenarios}}
+            <tr>
+              <td style="font-weight:700;">{{horizon}}</td>
+              <td>{{most_likely}}</td>
+              <td>{{{safe escalation_html}}}</td>
+              <td>{{triggers}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+        {{/if}}
+
+        {{#if escalation_indicators}}
+        <hr class="divider">
+        <div class="two-col">
+          <div>
+            <div class="sub-heading">Escalation Indicators</div>
+            <ul class="indicator-list">
+              {{#each escalation_indicators}}
+              <li class="critical-ind">{{this}}</li>
+              {{/each}}
+            </ul>
+          </div>
+          <div>
+            <div class="sub-heading">De-escalation Indicators</div>
+            <ul class="indicator-list">
+              {{#each deescalation_indicators}}
+              <li>{{this}}</li>
+              {{/each}}
+            </ul>
+          </div>
+        </div>
+        {{/if}}
+      </div>
+      {{/if}}
+
+      <!-- ╔═══════════════════════════════════╗
+           ║    PRIORITY ACTIONS PAGE          ║
+           ╚═══════════════════════════════════╝ -->
+      {{#if is_actions_page}}
+      <div class="card">
+        <div class="section-eyebrow">Priority Actions</div>
+        <div class="section-title">{{section_title}}</div>
+        <div class="section-desc">{{section_desc}}</div>
+
+        {{#each actions}}
+        <div class="action-item">
+          <div class="action-num">{{num}}</div>
+          <div class="action-content">
+            <h4>{{title}}</h4>
+            <p>{{{safe description}}}</p>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+
+      {{#if highest_yield_action}}
+      <div class="assessment-box accent-box">
+        <h4>Highest-Yield Defensive Move</h4>
+        <p>{{{safe highest_yield_action}}}</p>
+      </div>
+      {{/if}}
+
+      <!-- Data Quality -->
+      {{#if data_quality}}
+      <div class="card">
+        <div class="section-eyebrow">Data Quality</div>
+        <div class="sub-heading">Confidence Table</div>
+        <table class="intel-table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Confidence</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each data_quality}}
+            <tr>
+              <td style="font-weight:600;">{{domain}}</td>
+              <td>{{{safe confidence_html}}}</td>
+              <td>{{notes}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+      {{/if}}
+      {{/if}}
+
+      <!-- ╔═══════════════════════════════════╗
+           ║    SOURCES PAGE                   ║
+           ╚═══════════════════════════════════╝ -->
+      {{#if is_sources_page}}
+      <div class="card">
+        <div class="section-eyebrow">References</div>
+        <div class="section-title">Cited Sources</div>
+        <div style="margin-top:16px;">
+          {{#each sources}}
+          <div class="source-item">
+            <span class="source-num">{{num}}.</span>
+            <span class="source-text">{{{safe text}}}</span>
+          </div>
+          {{/each}}
+        </div>
+      </div>
+
+      {{#if deliverable_note}}
+      <div class="assessment-box accent-box">
+        <h4>Deliverable Note</h4>
+        <p>{{{safe deliverable_note}}}</p>
+      </div>
+      {{/if}}
+
+      <!-- Report Footer -->
+      <div style="text-align:center;margin-top:auto;padding-top:32px;">
+        <div style="font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">
+          {{../CLASSIFICATION}}
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);">
+          Generated by <strong>On Demand Intelligence Platform</strong> | {{../REPORT_DATE}}
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+          This document is the property of the requesting organization. Unauthorized distribution is prohibited.
+        </div>
+      </div>
+      {{/if}}
+
+      <!-- ╔═══════════════════════════════════╗
+           ║    GENERIC CONTENT PAGE           ║
+           ╚═══════════════════════════════════╝ -->
+      {{#if is_content_page}}
+      <div class="card">
+        <div class="section-eyebrow">{{section_eyebrow}}</div>
+        <div class="section-title">{{section_title}}</div>
+        {{#if section_desc}}<div class="section-desc">{{section_desc}}</div>{{/if}}
+        {{{safe content_html}}}
+      </div>
+
+      {{#if images}}
+      <div class="image-grid">
+        {{#each images}}
+        <div class="image-card">
+          <img src="{{url}}" alt="{{caption}}">
+          <div class="image-caption">
+            <div class="caption-title">{{caption}}</div>
+            {{#if meta}}<div class="caption-meta">{{meta}}</div>{{/if}}
+            {{#if type}}<span class="caption-type">{{type}}</span>{{/if}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      {{#if analyst_assessment}}
+      <div class="analyst-callout">
+        <h4>Analyst Assessment</h4>
+        <p>{{{safe analyst_assessment}}}</p>
+      </div>
+      {{/if}}
+      {{/if}}
+
+      <!-- PAGE NUMBER -->
+      <div class="page-number">
+        <span class="section-ref">{{section_ref}}</span>
+        <span>Page {{page_number}} of {{total_pages}}</span>
+      </div>
+
+    </div>
+    {{/each}}
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,6 @@
+node_modules/
+output.pdf
+debug_*.html
+debug_*.png
+.env
+.DS_Store

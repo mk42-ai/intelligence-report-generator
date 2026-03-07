@@ -1,0 +1,326 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Intelligence Report Generator API",
+    "version": "1.0.0",
+    "description": "Generate military-grade intelligence assessment PDF reports with satellite imagery, threat matrices, scenario analysis, and priority actions. Supports multi-domain threat assessment, vulnerability analysis, predictive outlook, and data quality confidence tables. Reports include classification banners, On Demand branding, and professional formatting."
+  },
+  "servers": [
+    {
+      "url": "https://YOUR_DEPLOYED_URL"
+    }
+  ],
+  "paths": {
+    "/intelligence-report/start": {
+      "post": {
+        "operationId": "startSession",
+        "summary": "Start a new intelligence report session",
+        "description": "Initialize a new session to begin building an intelligence report. Returns a sessionId to use in subsequent calls.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId"],
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "description": "A unique session identifier for this report (e.g., 'uae-iran-2026-03-07')"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session started successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "description": "Success message" },
+                    "sessionId": { "type": "string", "description": "The session ID" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/intelligence-report/update": {
+      "post": {
+        "operationId": "updateReportData",
+        "summary": "Add or update intelligence report data",
+        "description": "Send report content data to the session. Can be called multiple times to incrementally build the report. Data is merged with existing session data.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId"],
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "description": "The session ID from startSession"
+                  },
+                  "report_title": {
+                    "type": "string",
+                    "description": "Main title of the intelligence report (e.g., 'UAE-Iran Crisis — Predictive Threat Assessment')"
+                  },
+                  "report_subtitle": {
+                    "type": "string",
+                    "description": "Subtitle with scope descriptors (e.g., 'Launch Sites • Maritime Routes • Airspace • Strike Vectors')"
+                  },
+                  "report_date": {
+                    "type": "string",
+                    "description": "Report date (e.g., 'March 7, 2026')"
+                  },
+                  "report_id": {
+                    "type": "string",
+                    "description": "Report identifier (e.g., 'IR-2026-0307-UAE')"
+                  },
+                  "classification": {
+                    "type": "string",
+                    "description": "Classification level shown on banners. Options: 'TOP SECRET', 'SECRET', 'CONFIDENTIAL', 'FOR OFFICIAL USE ONLY', 'UNCLASSIFIED', or custom text like 'SENSITIVE — FOR OFFICIAL USE ONLY'"
+                  },
+                  "update_cadence": {
+                    "type": "string",
+                    "description": "How often the report is updated (e.g., '24h Rolling', 'Weekly')"
+                  },
+                  "executive_summary": {
+                    "type": "string",
+                    "description": "HTML-enabled executive summary text. Use <strong> for emphasis."
+                  },
+                  "key_stats": {
+                    "type": "array",
+                    "description": "Key statistics shown as cards on the cover page",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": { "type": "string", "description": "The stat value (e.g., 'CRITICAL', '48%', '5')" },
+                        "label": { "type": "string", "description": "Label below the value (e.g., 'Overall Threat Level')" },
+                        "type": { "type": "string", "description": "Color type: 'critical' (red), 'high' (orange), 'moderate' (yellow), 'low' (green), 'accent' (blue)" }
+                      }
+                    }
+                  },
+                  "cover_image": {
+                    "type": "object",
+                    "description": "Hero image for the cover page",
+                    "properties": {
+                      "url": { "type": "string", "description": "Direct URL to the image" },
+                      "caption": { "type": "string", "description": "Image caption" },
+                      "source": { "type": "string", "description": "Image source attribution" }
+                    }
+                  },
+                  "threat_matrix": {
+                    "type": "array",
+                    "description": "Threat matrix rows for the threat assessment page",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "domain": { "type": "string", "description": "Threat domain (e.g., 'Ballistic / Cruise Missiles')" },
+                        "threat_level": { "type": "string", "description": "Threat level: 'CRITICAL', 'HIGH', 'MODERATE', 'LOW'" },
+                        "vector": { "type": "string", "description": "Attack vector description" },
+                        "status": { "type": "string", "description": "Current status" },
+                        "concerns": { "type": "string", "description": "Key concerns" }
+                      }
+                    }
+                  },
+                  "key_indicators": {
+                    "type": "array",
+                    "description": "Key indicators to watch",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": { "type": "string", "description": "Indicator text (HTML enabled, use <strong> for emphasis)" },
+                        "level": { "type": "string", "description": "Indicator severity: 'critical', 'high', or empty" }
+                      }
+                    }
+                  },
+                  "analysis_sections": {
+                    "type": "array",
+                    "description": "Array of analysis section pages. Each becomes a separate page in the report.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "eyebrow": { "type": "string", "description": "Section category label (e.g., 'Strike Vectors', 'Maritime Analysis')" },
+                        "title": { "type": "string", "description": "Section title" },
+                        "description": { "type": "string", "description": "Section description text" },
+                        "section_ref": { "type": "string", "description": "Short reference shown in page footer" },
+                        "assessment_confidence": { "type": "string", "description": "Confidence level: 'High', 'Moderate', 'Low'" },
+                        "table": {
+                          "type": "object",
+                          "description": "Data table for this section",
+                          "properties": {
+                            "headers": { "type": "array", "items": { "type": "string" }, "description": "Column headers" },
+                            "rows": {
+                              "type": "array",
+                              "description": "Table rows",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "cells": { "type": "array", "items": { "type": "string" }, "description": "Cell values (HTML enabled)" }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "text": { "type": "string", "description": "Free-form analysis text (HTML enabled)" },
+                        "images": {
+                          "type": "array",
+                          "description": "Satellite/evidence images for this section",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "url": { "type": "string", "description": "Direct image URL" },
+                              "caption": { "type": "string", "description": "Image caption/title" },
+                              "meta": { "type": "string", "description": "Additional metadata text" },
+                              "type": { "type": "string", "description": "Image type badge (e.g., 'Satellite', 'Overhead', 'AIS Data', 'Sentinel')" }
+                            }
+                          }
+                        },
+                        "vulnerability_cards": {
+                          "type": "array",
+                          "description": "Vulnerability assessment cards with optional images",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "title": { "type": "string", "description": "Target/location name" },
+                              "threat_level": { "type": "string", "description": "Threat level: 'CRITICAL', 'HIGH', 'MODERATE', 'LOW'" },
+                              "image_url": { "type": "string", "description": "Satellite/evidence image URL" },
+                              "details": { "type": "string", "description": "Vulnerability details (HTML enabled)" }
+                            }
+                          }
+                        },
+                        "analyst_assessment": { "type": "string", "description": "Analyst assessment callout text (HTML enabled)" }
+                      }
+                    }
+                  },
+                  "scenarios": {
+                    "type": "array",
+                    "description": "Scenario matrix for predictive outlook page",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "horizon": { "type": "string", "description": "Time horizon (e.g., '7 Days', '30 Days', '90 Days')" },
+                        "most_likely": { "type": "string", "description": "Most likely scenario description" },
+                        "escalation_risk": { "type": "string", "description": "Escalation risk percentage (e.g., '48%')" },
+                        "triggers": { "type": "string", "description": "Decision triggers" }
+                      }
+                    }
+                  },
+                  "escalation_indicators": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "List of escalation warning indicators"
+                  },
+                  "deescalation_indicators": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "List of de-escalation indicators"
+                  },
+                  "priority_actions": {
+                    "type": "array",
+                    "description": "Priority action items",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": { "type": "string", "description": "Action title" },
+                        "description": { "type": "string", "description": "Action description (HTML enabled)" }
+                      }
+                    }
+                  },
+                  "highest_yield_action": {
+                    "type": "string",
+                    "description": "Highlighted highest-yield defensive action (HTML enabled)"
+                  },
+                  "data_quality": {
+                    "type": "array",
+                    "description": "Data quality/confidence table entries",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "domain": { "type": "string", "description": "Data domain (e.g., 'Satellite / IMINT')" },
+                        "confidence": { "type": "string", "description": "Confidence level: 'HIGH', 'MODERATE', 'LOW'" },
+                        "notes": { "type": "string", "description": "Notes about data quality" }
+                      }
+                    }
+                  },
+                  "sources": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Cited sources/references list"
+                  },
+                  "deliverable_note": {
+                    "type": "string",
+                    "description": "Deliverable disclaimer note (HTML enabled)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Data updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "description": "Success message" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/intelligence-report/generate": {
+      "post": {
+        "operationId": "generateReport",
+        "summary": "Generate the intelligence report PDF",
+        "description": "Compile all session data into a professionally formatted PDF intelligence report and return a download URL. The session is cleaned up after generation.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId"],
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "description": "The session ID to generate the report for"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "description": "Success message" },
+                    "url": { "type": "string", "description": "URL to download the generated PDF report" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

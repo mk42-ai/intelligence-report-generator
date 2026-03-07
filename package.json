@@ -1,0 +1,19 @@
+{
+  "name": "intelligence-report-generator",
+  "version": "1.0.0",
+  "description": "Military-grade Intelligence Report PDF Generator",
+  "main": "intelligence.js",
+  "scripts": {
+    "start": "node intelligence.js",
+    "test": "node test-intelligence.js"
+  },
+  "dependencies": {
+    "@azure/storage-blob": "^12.31.0",
+    "body-parser": "^1.20.4",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "handlebars": "^4.7.8",
+    "pdf-lib": "^1.17.1",
+    "puppeteer": "^21.11.0"
+  }
+}
