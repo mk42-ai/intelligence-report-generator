@@ -7,24 +7,24 @@ const app = express();
 const puppeteer = require("puppeteer");
 const { PDFDocument } = require("pdf-lib");
 const fs = require("fs");
-const {
-    BlobServiceClient,
-    StorageSharedKeyCredential,
-    generateBlobSASQueryParameters,
-    BlobSASPermissions,
-} = require("@azure/storage-blob");
-
-// Azure Env Variables
-const azAccountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY || "mock-key";
-const azAccountName = process.env.AZURE_STORAGE_ACCOUNT_NAME || "mock-name";
-const azContainerName = process.env.AZURE_STORAGE_CONTAINER_NAME || "mock-container";
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ limit: "50mb" }));
 
 // ---------------------------------------------------------
-// AZURE HELPER FUNCTIONS
+// PDF STORE & HELPERS
 // ---------------------------------------------------------
+const pdfStore = new Map(); // id -> { buffer, createdAt }
+const PDF_TTL = 60 * 60 * 1000; // 1 hour
+
+// Cleanup expired PDFs every 10 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [id, entry] of pdfStore) {
+        if (now - entry.createdAt > PDF_TTL) pdfStore.delete(id);
+    }
+}, 10 * 60 * 1000);
+
 function getRandomString(length = 10) {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     let result = "";
@@ -34,41 +34,14 @@ function getRandomString(length = 10) {
     return result;
 }
 
-async function uploadPdfToAzure(pdfBytes) {
-    if (azAccountName === "mock-name") {
-        console.log("Mocking Azure Upload. Saving locally to 'output.pdf'");
-        fs.writeFileSync("output.pdf", pdfBytes);
-        return "http://localhost:3000/output.pdf (Saved locally)";
-    }
-
-    const sharedKeyCredential = new StorageSharedKeyCredential(azAccountName, azAccountKey);
-    const blobServiceClient = new BlobServiceClient(
-        `https://${azAccountName}.blob.core.windows.net`,
-        sharedKeyCredential
-    );
-    const containerClient = blobServiceClient.getContainerClient(azContainerName);
-
-    if (!(await containerClient.exists())) {
-        throw new Error("Container does not exist");
-    }
-
-    const blobName = `${getRandomString()}.pdf`;
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    await blockBlobClient.uploadData(pdfBytes);
-
-    const expiryDate = new Date();
-    expiryDate.setMinutes(expiryDate.getMinutes() + 15);
-
-    const sasToken = generateBlobSASQueryParameters({
-        containerName: azContainerName,
-        blobName,
-        permissions: BlobSASPermissions.parse("r"),
-        startsOn: new Date(),
-        expiresOn: expiryDate,
-    }, sharedKeyCredential).toString();
-
-    return `${blockBlobClient.url}?${sasToken}`;
-}
+// Serve PDFs directly from memory
+app.get('/intelligence-report/download/:id', (req, res) => {
+    const entry = pdfStore.get(req.params.id);
+    if (!entry) return res.status(404).json({ error: "PDF not found or expired" });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="intelligence-report-${req.params.id}.pdf"`);
+    res.send(entry.buffer);
+});
 
 // ---------------------------------------------------------
 // CONFIGURATION & HELPERS
@@ -536,9 +509,17 @@ app.post('/intelligence-report/generate', async (req, res) => {
 
         const html = compiledTemplate(context);
         const pdfBytes = await renderDynamicPdf(html);
-        const url = await uploadPdfToAzure(pdfBytes);
 
-        // Cleanup
+        // Store PDF in memory and return download URL
+        const pdfId = getRandomString(16);
+        pdfStore.set(pdfId, { buffer: pdfBytes, createdAt: Date.now() });
+
+        // Build download URL using the request's host
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+        const host = req.headers['x-forwarded-host'] || req.headers['host'];
+        const url = `${protocol}://${host}/intelligence-report/download/${pdfId}`;
+
+        // Cleanup session
         sessionStore.delete(sessionId);
 
         res.json({ message: "Intelligence report generated", url });
