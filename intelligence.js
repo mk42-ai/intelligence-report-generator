@@ -54,7 +54,8 @@ async function getImageDataUrl(filePath) {
     try {
         const data = fs.readFileSync(filePath);
         const ext = path.extname(filePath).toLowerCase().replace('.', '');
-        const mime = ext === 'svg' ? 'image/svg+xml' : `image/${ext}`;
+        const mimeMap = { svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp' };
+        const mime = mimeMap[ext] || `image/${ext}`;
         return `data:${mime};base64,${data.toString('base64')}`;
     } catch {
         return "";
@@ -85,13 +86,12 @@ function getConfidenceBadgeHtml(confidence) {
 function getEscalationHtml(value) {
     if (!value) return "";
     const v = String(value);
-    // If it contains a percentage, color it
     const num = parseInt(v);
     let color = "var(--moderate)";
     if (num >= 70) color = "var(--critical)";
     else if (num >= 40) color = "var(--high)";
     else if (num < 20) color = "var(--low)";
-    return `<span style="font-weight:700;color:${color};">${v}</span>`;
+    return `<span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${color};">${v}</span>`;
 }
 
 // Classification class mapping
@@ -114,14 +114,58 @@ function getStatClass(type) {
     return "accent-stat";
 }
 
-// Assessment box class
-function getAssessmentBoxClass(level) {
-    const l = (level || "").toLowerCase();
-    if (l.includes("critical")) return "critical-box";
-    if (l.includes("high")) return "high-box";
-    if (l.includes("moderate")) return "moderate-box";
-    if (l.includes("low")) return "low-box";
-    return "accent-box";
+// Sentiment class
+function getSentimentClass(sentiment) {
+    const s = (sentiment || "").toLowerCase();
+    if (s.includes("positive") || s.includes("pos")) return "pos";
+    if (s.includes("negative") || s.includes("neg")) return "neg";
+    return "neu";
+}
+
+// Sentiment overall class
+function getSentimentOverallClass(sentiment) {
+    const s = (sentiment || "").toLowerCase();
+    if (s.includes("positive")) return "positive";
+    if (s.includes("negative")) return "negative";
+    return "neutral";
+}
+
+// Explosion status class
+function getExplosionStatusClass(status) {
+    const s = (status || "").toLowerCase();
+    if (s.includes("confirmed") && !s.includes("un")) return "confirmed";
+    return "unconfirmed";
+}
+
+// Bar chart color class
+function getBarColorClass(color) {
+    const c = (color || "accent").toLowerCase();
+    if (c.includes("critical") || c.includes("red")) return "critical";
+    if (c.includes("high") || c.includes("orange")) return "high";
+    if (c.includes("moderate") || c.includes("yellow")) return "moderate";
+    if (c.includes("low") || c.includes("green")) return "low";
+    if (c.includes("olive")) return "olive";
+    return "accent";
+}
+
+// Process bar chart data
+function processCharts(charts) {
+    if (!Array.isArray(charts) || charts.length === 0) return undefined;
+    return charts.map(chart => {
+        const maxVal = Math.max(...(chart.bars || []).map(b => Number(b.value) || 0), 1);
+        return {
+            title: String(chart.title || ""),
+            bars: (chart.bars || []).map(bar => {
+                const val = Number(bar.value) || 0;
+                return {
+                    label: String(bar.label || ""),
+                    value: String(bar.value || "0"),
+                    percent: Math.round((val / maxVal) * 100),
+                    color: getBarColorClass(bar.color)
+                };
+            })
+        };
+    });
 }
 
 // ---------------------------------------------------------
@@ -149,26 +193,22 @@ async function renderDynamicPdf(html) {
                 const wrappers = document.querySelectorAll('.page-wrapper');
                 const container = document.querySelector('.page-container');
 
-                // Hide all wrappers
                 wrappers.forEach(w => w.style.display = 'none');
 
-                // Show current wrapper
                 const current = wrappers[index];
                 current.style.display = 'flex';
 
-                // Remove container padding so content starts at top
                 if (container) {
                     container.style.paddingTop = '0px';
                     container.style.marginTop = '0px';
                 }
 
-                // Force reflow
                 current.offsetHeight;
 
                 const box = current.getBoundingClientRect();
                 return {
                     width: box.width,
-                    height: Math.ceil(box.height) + 76 // Add space for fixed header
+                    height: Math.ceil(box.height) + 76
                 };
             }, i);
 
@@ -259,6 +299,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
         const classification = String(input.classification || "UNCLASSIFIED");
         const classificationClass = getClassificationClass(classification);
         const updateCadence = String(input.update_cadence || "As Required");
+        const orgName = String(input.org_name || "BASEERA INTELLIGENCE");
 
         // ────────────────────────────────────
         // BUILD PAGES
@@ -268,7 +309,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
 
         // ── COVER PAGE ──
         const coverStats = Array.isArray(input.key_stats) ? input.key_stats.map(s => ({
-            value: String(s.value || "—"),
+            value: String(s.value || "\u2014"),
             label: String(s.label || ""),
             stat_class: getStatClass(s.type)
         })) : [];
@@ -278,6 +319,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
             section_ref: "Cover",
             executive_summary: String(input.executive_summary || ""),
             stats: coverStats.length > 0 ? coverStats : undefined,
+            charts: processCharts(input.cover_charts),
         };
 
         if (input.cover_image) {
@@ -313,7 +355,8 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 section_desc: String(input.threat_matrix_desc || "Multi-domain threat assessment with current status and key concerns."),
                 threat_rows: threatRows,
                 key_indicators: keyIndicators.length > 0 ? keyIndicators : undefined,
-                indicator_horizon: String(input.indicator_horizon || "72h")
+                indicator_horizon: String(input.indicator_horizon || "72h"),
+                charts: processCharts(input.threat_charts),
             });
         }
 
@@ -326,33 +369,27 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 section_eyebrow: String(section.eyebrow || "Domain Analysis"),
                 section_title: String(section.title || "Analysis"),
                 section_desc: String(section.description || ""),
+                charts: processCharts(section.charts),
             };
 
-            // Assessment confidence
             if (section.assessment_confidence) {
                 page.assessment_confidence = true;
                 page.assessment_confidence_html = getConfidenceBadgeHtml(String(section.assessment_confidence));
             }
 
-            // Table data
             if (section.table) {
                 page.analysis_table = {
                     headers: Array.isArray(section.table.headers) ? section.table.headers.map(String) : [],
                     rows: Array.isArray(section.table.rows) ? section.table.rows.map(row => ({
-                        cells: Array.isArray(row.cells) ? row.cells.map(cell => {
-                            // Auto-detect threat/confidence badges in cell content
-                            return String(cell);
-                        }) : Array.isArray(row) ? row.map(String) : []
+                        cells: Array.isArray(row.cells) ? row.cells.map(cell => String(cell)) : Array.isArray(row) ? row.map(String) : []
                     })) : []
                 };
             }
 
-            // Free text
             if (section.text) {
                 page.analysis_text = String(section.text);
             }
 
-            // Images (satellite, evidence, etc.)
             if (Array.isArray(section.images) && section.images.length > 0) {
                 page.images = section.images.map(img => ({
                     url: String(img.url || ""),
@@ -362,7 +399,6 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 }));
             }
 
-            // Vulnerability cards
             if (Array.isArray(section.vulnerability_cards) && section.vulnerability_cards.length > 0) {
                 page.vulnerability_cards = section.vulnerability_cards.map(vc => ({
                     title: String(vc.title || ""),
@@ -372,13 +408,105 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 }));
             }
 
-            // Analyst assessment
             if (section.analyst_assessment) {
                 page.analyst_assessment = String(section.analyst_assessment);
             }
 
             allPages.push(page);
         });
+
+        // ── SENTIMENT ANALYSIS PAGE ──
+        if (input.sentiment_analysis) {
+            const sa = input.sentiment_analysis;
+
+            const sentimentPage = {
+                is_sentiment_page: true,
+                section_ref: "Sentiment Analysis",
+                section_title: String(sa.title || "Regional Sentiment Analysis"),
+                section_desc: String(sa.description || "Aggregated sentiment intelligence across monitored sources and communication channels."),
+                overall_sentiment: String(sa.overall_sentiment || "Neutral"),
+                overall_sentiment_class: getSentimentOverallClass(sa.overall_sentiment),
+                overall_score: String(sa.overall_score || "0.00"),
+                sources_analyzed: String(sa.sources_analyzed || "0"),
+                time_period: String(sa.time_period || "N/A"),
+                charts: processCharts(sa.charts),
+            };
+
+            if (Array.isArray(sa.categories) && sa.categories.length > 0) {
+                sentimentPage.categories = sa.categories.map(cat => ({
+                    name: String(cat.name || ""),
+                    positive: Number(cat.positive) || 0,
+                    neutral: Number(cat.neutral) || 0,
+                    negative: Number(cat.negative) || 0,
+                    key_narrative: cat.key_narrative ? String(cat.key_narrative) : undefined,
+                }));
+            }
+
+            if (Array.isArray(sa.trending_topics) && sa.trending_topics.length > 0) {
+                sentimentPage.trending_topics = sa.trending_topics.map(tt => ({
+                    topic: String(tt.topic || ""),
+                    sentiment: String(tt.sentiment || "Neutral"),
+                    sentiment_class: getSentimentClass(tt.sentiment),
+                    volume: String(tt.volume || "0"),
+                }));
+            }
+
+            if (sa.analyst_assessment) {
+                sentimentPage.analyst_assessment = String(sa.analyst_assessment);
+            }
+
+            allPages.push(sentimentPage);
+        }
+
+        // ── EXPLOSION DETECTION PAGE ──
+        if (input.explosion_detection) {
+            const ed = input.explosion_detection;
+            const summary = ed.summary || {};
+
+            const explosionPage = {
+                is_explosion_page: true,
+                section_ref: "Explosion Detection",
+                section_title: String(ed.title || "Explosion / Blast Event Detection"),
+                section_desc: String(ed.description || "Monitored blast and explosion events detected via satellite IR, seismic, and acoustic sensors."),
+                summary_total: String(summary.total_events || "0"),
+                summary_confirmed: String(summary.confirmed || "0"),
+                summary_unconfirmed: String(summary.unconfirmed || "0"),
+                summary_timespan: String(summary.time_span || "N/A"),
+                charts: processCharts(ed.charts),
+            };
+
+            if (Array.isArray(ed.events) && ed.events.length > 0) {
+                explosionPage.events = ed.events.map(evt => {
+                    const event = {
+                        event_id: String(evt.event_id || "EXP-???"),
+                        timestamp: String(evt.timestamp || ""),
+                        location: String(evt.location || evt.location_name || ""),
+                        magnitude: String(evt.magnitude || "Unknown"),
+                        confidence: String(evt.confidence != null ? (typeof evt.confidence === 'number' && evt.confidence <= 1 ? (evt.confidence * 100).toFixed(0) + '%' : evt.confidence) : "N/A"),
+                        blast_radius: evt.blast_radius_m ? String(evt.blast_radius_m) + 'm' : (evt.blast_radius ? String(evt.blast_radius) : undefined),
+                        source: evt.source ? String(evt.source) : undefined,
+                        status: String(evt.status || "Unconfirmed"),
+                        status_class: getExplosionStatusClass(evt.status),
+                        details: evt.details ? String(evt.details) : undefined,
+                    };
+
+                    if (Array.isArray(evt.images) && evt.images.length > 0) {
+                        event.images = evt.images.map(img => ({
+                            url: String(img.url || ""),
+                            caption: String(img.caption || ""),
+                        }));
+                    }
+
+                    return event;
+                });
+            }
+
+            if (ed.analyst_assessment) {
+                explosionPage.analyst_assessment = String(ed.analyst_assessment);
+            }
+
+            allPages.push(explosionPage);
+        }
 
         // ── SCENARIO / OUTLOOK PAGE ──
         if (Array.isArray(input.scenarios) && input.scenarios.length > 0) {
@@ -392,7 +520,8 @@ app.post('/intelligence-report/generate', async (req, res) => {
                     most_likely: String(s.most_likely || ""),
                     escalation_html: getEscalationHtml(s.escalation_risk),
                     triggers: String(s.triggers || "")
-                }))
+                })),
+                charts: processCharts(input.scenario_charts),
             };
 
             if (Array.isArray(input.escalation_indicators)) {
@@ -423,7 +552,6 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 actionsPage.highest_yield_action = String(input.highest_yield_action);
             }
 
-            // Data quality table
             if (Array.isArray(input.data_quality) && input.data_quality.length > 0) {
                 actionsPage.data_quality = input.data_quality.map(d => ({
                     domain: String(d.domain || ""),
@@ -458,6 +586,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
                     section_title: String(pg.title || ""),
                     section_desc: pg.description ? String(pg.description) : undefined,
                     content_html: String(pg.content_html || ""),
+                    charts: processCharts(pg.charts),
                 };
 
                 if (Array.isArray(pg.images) && pg.images.length > 0) {
@@ -496,15 +625,30 @@ app.post('/intelligence-report/generate', async (req, res) => {
             CLASSIFICATION: classification,
             CLASSIFICATION_CLASS: classificationClass,
             UPDATE_CADENCE: updateCadence,
+            ORG_NAME: orgName,
             PAGES: allPages
         };
 
-        // Try to load logo
-        const logoPath = "/usr/src/app/Intelligence Report/logo.svg";
-        const localLogoPath = path.join(__dirname, "Intelligence Report/logo.svg");
-        const logoFile = fs.existsSync(logoPath) ? logoPath : (fs.existsSync(localLogoPath) ? localLogoPath : null);
-        if (logoFile) {
-            context.LOGO = await getImageDataUrl(logoFile);
+        // Try to load logo — check PNG first (for the Baseera logo), then SVG
+        const logoSearchPaths = [
+            path.join(__dirname, "Intelligence Report/logo.png"),
+            "/usr/src/app/Intelligence Report/logo.png",
+            path.join(__dirname, "Intelligence Report/logo.svg"),
+            "/usr/src/app/Intelligence Report/logo.svg",
+            path.join(__dirname, "Intelligence Report/logo.jpg"),
+            "/usr/src/app/Intelligence Report/logo.jpg",
+        ];
+
+        for (const lp of logoSearchPaths) {
+            if (fs.existsSync(lp)) {
+                context.LOGO = await getImageDataUrl(lp);
+                break;
+            }
+        }
+
+        // Allow logo override via API input (base64 data URL)
+        if (input.logo_base64) {
+            context.LOGO = String(input.logo_base64);
         }
 
         const html = compiledTemplate(context);
