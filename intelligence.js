@@ -165,6 +165,10 @@ function processCharts(charts) {
 // ---------------------------------------------------------
 // PUPPETEER RENDER
 // ---------------------------------------------------------
+// A4 at 96 DPI: 794 × 1123 px
+const PAGE_WIDTH = 794;
+const PAGE_HEIGHT = 1123;
+
 async function renderDynamicPdf(html) {
     const browser = await puppeteer.launch({
         headless: "new",
@@ -173,53 +177,50 @@ async function renderDynamicPdf(html) {
 
     try {
         const page = await browser.newPage();
-        await page.setViewport({ width: 960, height: 1200 });
+        await page.setViewport({ width: PAGE_WIDTH, height: PAGE_HEIGHT });
         await page.setContent(html, { waitUntil: "networkidle0", timeout: 60000 });
 
-        const mergedPdf = await PDFDocument.create();
+        // Inject fixed-page CSS: each .page-wrapper = exactly one A4 page,
+        // overflow hidden so content clips rather than creating mega-tall pages.
+        await page.addStyleTag({ content: `
+            @page { size: ${PAGE_WIDTH}px ${PAGE_HEIGHT}px; margin: 0; }
+            html, body { margin: 0; padding: 0; }
+            .page-container { max-width: ${PAGE_WIDTH}px; margin: 0; padding: 0; }
+            .page-wrapper {
+                width: ${PAGE_WIDTH}px;
+                height: ${PAGE_HEIGHT}px;
+                max-height: ${PAGE_HEIGHT}px;
+                overflow: hidden;
+                page-break-after: always;
+                page-break-inside: avoid;
+                box-sizing: border-box;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                padding: 76px 28px 44px;
+                margin: 0;
+            }
+            .page-wrapper:last-child { page-break-after: avoid; }
+            .classification-banner {
+                position: fixed; top: 0; left: 0; right: 0; height: 24px; z-index: 2000;
+            }
+            .classification-banner-bottom {
+                position: fixed; bottom: 0; left: 0; right: 0; height: 20px; z-index: 2000;
+            }
+            .page-header-bar {
+                position: fixed; top: 24px; left: 0; right: 0; height: 48px; z-index: 1500;
+            }
+        `});
 
-        const pageCount = await page.evaluate(() => {
-            return document.querySelectorAll('.page-wrapper').length;
+        // Use Puppeteer's native page-break-aware PDF rendering
+        const pdfBuffer = await page.pdf({
+            printBackground: true,
+            width: `${PAGE_WIDTH}px`,
+            height: `${PAGE_HEIGHT}px`,
+            margin: { top: 0, right: 0, bottom: 0, left: 0 }
         });
 
-        for (let i = 0; i < pageCount; i++) {
-            const dimensions = await page.evaluate((index) => {
-                const wrappers = document.querySelectorAll('.page-wrapper');
-                const container = document.querySelector('.page-container');
-
-                wrappers.forEach(w => w.style.display = 'none');
-                const current = wrappers[index];
-                current.style.display = 'flex';
-
-                if (container) {
-                    container.style.paddingTop = '0px';
-                    container.style.marginTop = '0px';
-                }
-
-                current.offsetHeight;
-
-                const box = current.getBoundingClientRect();
-                return {
-                    width: box.width,
-                    height: Math.ceil(box.height) + 76
-                };
-            }, i);
-
-            const pageBuffer = await page.pdf({
-                printBackground: true,
-                width: `${dimensions.width}px`,
-                height: `${dimensions.height}px`,
-                pageRanges: '1',
-                margin: { top: 0, right: 0, bottom: 0, left: 0 }
-            });
-
-            const pdfDoc = await PDFDocument.load(pageBuffer);
-            const [copiedPage] = await mergedPdf.copyPages(pdfDoc, [0]);
-            mergedPdf.addPage(copiedPage);
-        }
-
-        const pdfBytes = await mergedPdf.save();
-        return Buffer.from(pdfBytes);
+        return Buffer.from(pdfBuffer);
     } finally {
         await browser.close();
     }
