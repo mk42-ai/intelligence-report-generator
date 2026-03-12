@@ -10,20 +10,18 @@
     rel="stylesheet">
   <style>
     :root {
-      /* ── Dark military palette ── */
-      --bg: #080c14;
-      --surface: #0d1420;
-      --surface-card: #111b2c;
-      --surface-alt: #162033;
-      --surface-elevated: #1a263b;
-      --text: #dce3ed;
-      --text-secondary: #8b97a8;
-      --text-muted: #5a6577;
-      --border: #1e2d42;
+      --bg: #060a12;
+      --surface: #0b1018;
+      --surface-card: #0f1724;
+      --surface-alt: #131d2e;
+      --surface-elevated: #182438;
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: #1e293b;
       --border-light: #172236;
       --border-accent: #2a3f5c;
 
-      /* ── Classification colors ── */
       --ts-red: #dc2626;
       --ts-bg: rgba(220,38,38,0.15);
       --secret-orange: #ea580c;
@@ -35,40 +33,38 @@
       --unclass-grey: #64748b;
       --unclass-bg: rgba(100,116,139,0.15);
 
-      /* ── Threat severity ── */
       --critical: #ef4444;
-      --critical-bg: rgba(239,68,68,0.12);
+      --critical-bg: rgba(239,68,68,0.10);
       --high: #f97316;
-      --high-bg: rgba(249,115,22,0.12);
+      --high-bg: rgba(249,115,22,0.10);
       --moderate: #eab308;
-      --moderate-bg: rgba(234,179,8,0.12);
+      --moderate-bg: rgba(234,179,8,0.10);
       --low: #22c55e;
-      --low-bg: rgba(34,197,94,0.12);
+      --low-bg: rgba(34,197,94,0.10);
 
-      /* ── Accents ── */
       --steel: #4a90d9;
-      --steel-light: rgba(74,144,217,0.15);
+      --steel-light: rgba(74,144,217,0.12);
       --amber: #f0b429;
-      --amber-light: rgba(240,180,41,0.12);
+      --amber-light: rgba(240,180,41,0.10);
       --olive: #6b8e50;
-      --navy: #0a1022;
+      --navy: #080e1a;
       --navy-mid: #0f172a;
-      --navy-light: #1e293b;
 
-      /* ── Sentiment ── */
       --positive: #22c55e;
-      --positive-bg: rgba(34,197,94,0.12);
-      --neutral: #64748b;
-      --neutral-bg: rgba(100,116,139,0.12);
+      --positive-bg: rgba(34,197,94,0.10);
+      --neutral-color: #64748b;
+      --neutral-bg: rgba(100,116,139,0.10);
       --negative: #ef4444;
-      --negative-bg: rgba(239,68,68,0.12);
+      --negative-bg: rgba(239,68,68,0.10);
 
-      /* ── System ── */
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-      --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
-      --radius: 2px;
-      --radius-lg: 3px;
+      --x-blue: #1d9bf0;
+      --x-bg: rgba(29,155,240,0.10);
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.6);
+      --radius: 3px;
+      --radius-lg: 4px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -79,220 +75,122 @@
       color: var(--text);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
-      font-size: 12px;
+      font-size: 11px;
     }
 
-    /* ═══════════════════════════════════════════
-       MONOSPACE MILITARY HEADINGS
-    ═══════════════════════════════════════════ */
     .mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
 
-    /* ═══════════════════════════════════════════
-       CLASSIFICATION BANNER
-    ═══════════════════════════════════════════ */
+    /* ═══ CLASSIFICATION BANNER ═══ */
     .classification-banner {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 24px;
+      display: flex; align-items: center; justify-content: center;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 4px;
-      text-transform: uppercase;
+      font-size: 9px; font-weight: 800;
+      letter-spacing: 5px; text-transform: uppercase;
       z-index: 2000;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .classification-banner.top-secret { background: var(--ts-red); color: white; }
     .classification-banner.secret { background: var(--secret-orange); color: white; }
     .classification-banner.confidential { background: var(--conf-blue); color: white; }
     .classification-banner.fouo { background: var(--fouo-green); color: white; }
-    .classification-banner.unclassified { background: #374151; color: #9ca3af; }
+    .classification-banner.unclassified { background: #1e293b; color: #94a3b8; }
 
     .classification-banner-bottom {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 20px;
+      display: flex; align-items: center; justify-content: center;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 4px;
-      text-transform: uppercase;
+      font-size: 8px; font-weight: 800;
+      letter-spacing: 5px; text-transform: uppercase;
       z-index: 2000;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .classification-banner-bottom.top-secret { background: var(--ts-red); color: white; }
     .classification-banner-bottom.secret { background: var(--secret-orange); color: white; }
     .classification-banner-bottom.confidential { background: var(--conf-blue); color: white; }
     .classification-banner-bottom.fouo { background: var(--fouo-green); color: white; }
-    .classification-banner-bottom.unclassified { background: #374151; color: #9ca3af; }
+    .classification-banner-bottom.unclassified { background: #1e293b; color: #94a3b8; }
 
-    /* ═══════════════════════════════════════════
-       PAGE HEADER BAR
-    ═══════════════════════════════════════════ */
+    /* ═══ HEADER BAR ═══ */
     .page-header-bar {
-      position: fixed;
-      top: 26px; left: 0; right: 0;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      position: fixed; top: 24px; left: 0; right: 0;
+      height: 48px;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 28px;
-      background: linear-gradient(180deg, #0c1424 0%, #0a1020 100%);
+      background: linear-gradient(180deg, #0a1220 0%, #080e1a 100%);
       border-bottom: 1px solid var(--border-accent);
       z-index: 1500;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
     .page-header-bar::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
       height: 2px;
       background: linear-gradient(90deg, var(--steel) 0%, var(--amber) 50%, var(--steel) 100%);
     }
-    .page-header-bar .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .page-header-bar .logo-area img {
-      height: 34px;
-      width: auto;
-      object-fit: contain;
-    }
+    .page-header-bar .logo-area { display: flex; align-items: center; gap: 12px; }
+    .page-header-bar .logo-area img { height: 30px; width: auto; object-fit: contain; }
     .page-header-bar .org-name {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--steel);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 3px;
-      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace; color: var(--steel);
+      font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
     }
     .page-header-bar .header-right {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--text-muted);
-      font-weight: 500;
+      display: flex; align-items: center; gap: 14px;
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-muted); font-weight: 500;
     }
     .page-header-bar .header-right .date-badge {
-      padding: 3px 10px;
-      background: rgba(74,144,217,0.1);
-      border: 1px solid rgba(74,144,217,0.25);
-      font-weight: 600;
-      color: var(--steel);
-    }
-    .page-header-bar .header-right .id-badge {
-      color: var(--text-muted);
-      letter-spacing: 1px;
+      padding: 3px 10px; background: rgba(74,144,217,0.08);
+      border: 1px solid rgba(74,144,217,0.2); font-weight: 600; color: var(--steel);
     }
 
-    /* ═══════════════════════════════════════════
-       WATERMARK
-    ═══════════════════════════════════════════ */
+    /* ═══ WATERMARK ═══ */
     .watermark {
-      position: fixed;
-      top: 50%; left: 50%;
+      position: fixed; top: 50%; left: 50%;
       transform: translate(-50%, -50%) rotate(-35deg);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 72px;
-      font-weight: 900;
-      letter-spacing: 16px;
-      color: rgba(255,255,255,0.015);
-      z-index: 1;
-      pointer-events: none;
-      white-space: nowrap;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      font-size: 64px; font-weight: 900; letter-spacing: 16px;
+      color: rgba(255,255,255,0.012); z-index: 1; pointer-events: none; white-space: nowrap;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
 
-    /* ═══════════════════════════════════════════
-       PAGE STRUCTURE
-    ═══════════════════════════════════════════ */
+    /* ═══ PAGE STRUCTURE ═══ */
     .page-container {
-      width: 100%;
-      max-width: 960px;
-      margin: 0 auto;
-      padding-top: 76px;
-      padding-bottom: 22px;
-      position: relative;
+      width: 100%; max-width: 960px; margin: 0 auto;
+      padding-top: 72px; padding-bottom: 20px; position: relative;
     }
-
     .page-wrapper {
-      padding: 28px 24px 56px;
-      min-height: calc(100vh - 48px);
-      position: relative;
-      display: flex;
-      flex-direction: column;
+      padding: 24px 24px 52px; min-height: calc(100vh - 44px);
+      position: relative; display: flex; flex-direction: column;
       page-break-inside: avoid;
     }
-
     .page-number {
-      position: absolute;
-      bottom: 26px;
-      left: 24px;
-      right: 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      color: var(--text-muted);
-      font-weight: 600;
-      letter-spacing: 1px;
+      position: absolute; bottom: 24px; left: 24px; right: 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px;
+      color: var(--text-muted); font-weight: 600; letter-spacing: 1px;
     }
-    .page-number .section-ref {
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
+    .page-number .section-ref { text-transform: uppercase; letter-spacing: 2px; }
 
-    /* ═══════════════════════════════════════════
-       COVER PAGE
-    ═══════════════════════════════════════════ */
+    /* ═══ COVER PAGE ═══ */
     .cover-hero {
-      background: linear-gradient(160deg, #080e1a 0%, #0d1628 40%, #111f3a 100%);
+      background: linear-gradient(160deg, #060a14 0%, #0c1628 40%, #101e38 100%);
       border: 1px solid var(--border-accent);
-      padding: 48px 40px 40px;
-      color: white;
-      position: relative;
-      overflow: hidden;
-      margin-bottom: 24px;
+      padding: 44px 36px 36px; position: relative; overflow: hidden; margin-bottom: 20px;
     }
     .cover-hero::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
       background: linear-gradient(90deg, var(--steel), var(--amber), var(--steel));
     }
     .cover-hero::after {
-      content: '';
-      position: absolute;
-      top: -30%; right: -10%;
-      width: 400px; height: 400px;
-      background: radial-gradient(circle, rgba(74,144,217,0.06) 0%, transparent 70%);
+      content: ''; position: absolute; top: -30%; right: -10%;
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(74,144,217,0.05) 0%, transparent 70%);
     }
-
     .cover-classification {
-      display: inline-block;
-      padding: 4px 14px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-      border: 1px solid;
+      display: inline-block; padding: 3px 12px;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 800;
+      letter-spacing: 4px; text-transform: uppercase; margin-bottom: 16px; border: 1px solid;
     }
     .cover-classification.top-secret { background: var(--ts-bg); border-color: rgba(220,38,38,0.4); color: #fca5a5; }
     .cover-classification.secret { background: var(--secret-bg); border-color: rgba(234,88,12,0.4); color: #fdba74; }
@@ -301,754 +199,470 @@
     .cover-classification.unclassified { background: var(--unclass-bg); border-color: rgba(100,116,139,0.4); color: #cbd5e1; }
 
     .cover-hero h1 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 28px;
-      font-weight: 800;
-      line-height: 1.2;
-      margin-bottom: 6px;
-      letter-spacing: -0.5px;
-      color: #f1f5f9;
+      font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 800;
+      line-height: 1.2; margin-bottom: 6px; letter-spacing: -0.5px; color: #f1f5f9;
     }
     .cover-hero .subtitle {
-      font-size: 14px;
-      font-weight: 400;
-      color: var(--text-secondary);
-      margin-bottom: 28px;
-      line-height: 1.5;
+      font-size: 13px; font-weight: 400; color: var(--text-secondary);
+      margin-bottom: 24px; line-height: 1.5;
     }
-
     .cover-meta-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 1px; background: var(--border); border: 1px solid var(--border);
     }
-    .cover-meta-item {
-      padding: 12px 14px;
-      background: rgba(255,255,255,0.02);
-    }
+    .cover-meta-item { padding: 10px 12px; background: rgba(255,255,255,0.02); }
     .cover-meta-item .meta-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 3px;
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px;
     }
     .cover-meta-item .meta-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--steel);
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; color: var(--steel);
     }
 
-    /* ═══════════════════════════════════════════
-       CARDS & SECTIONS
-    ═══════════════════════════════════════════ */
+    /* ═══ CARDS ═══ */
     .card {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      padding: 24px 28px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow-sm);
+      background: var(--surface-card); border: 1px solid var(--border);
+      padding: 22px 24px; margin-bottom: 14px; box-shadow: var(--shadow-sm);
     }
-    .card-dark {
-      background: var(--navy);
-      border-color: var(--border-accent);
-    }
+    .card-dark { background: var(--navy); border-color: var(--border-accent); }
 
     .section-eyebrow {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--steel);
-      margin-bottom: 4px;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 800;
+      letter-spacing: 3px; text-transform: uppercase; color: var(--steel); margin-bottom: 4px;
     }
-
     .section-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-      letter-spacing: -0.3px;
+      font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700;
+      color: var(--text); margin-bottom: 4px; letter-spacing: -0.3px;
     }
-
     .section-desc {
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.7;
-      margin-bottom: 20px;
+      font-size: 11px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 18px;
     }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 20px 0;
-    }
-
-    /* ═══════════════════════════════════════════
-       THREAT LEVEL BADGES
-    ═══════════════════════════════════════════ */
+    /* ═══ THREAT BADGES ═══ */
     .threat-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      border: 1px solid;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; font-family: 'JetBrains Mono', monospace;
+      font-size: 8px; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; border: 1px solid;
     }
-    .threat-badge::before {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 1px;
-    }
-    .threat-badge.critical { background: var(--critical-bg); color: var(--critical); border-color: rgba(239,68,68,0.3); }
+    .threat-badge::before { content: ''; width: 5px; height: 5px; }
+    .threat-badge.critical { background: var(--critical-bg); color: var(--critical); border-color: rgba(239,68,68,0.25); }
     .threat-badge.critical::before { background: var(--critical); }
-    .threat-badge.high { background: var(--high-bg); color: var(--high); border-color: rgba(249,115,22,0.3); }
+    .threat-badge.high { background: var(--high-bg); color: var(--high); border-color: rgba(249,115,22,0.25); }
     .threat-badge.high::before { background: var(--high); }
-    .threat-badge.moderate { background: var(--moderate-bg); color: var(--moderate); border-color: rgba(234,179,8,0.3); }
+    .threat-badge.moderate { background: var(--moderate-bg); color: var(--moderate); border-color: rgba(234,179,8,0.25); }
     .threat-badge.moderate::before { background: var(--moderate); }
-    .threat-badge.low { background: var(--low-bg); color: var(--low); border-color: rgba(34,197,94,0.3); }
+    .threat-badge.low { background: var(--low-bg); color: var(--low); border-color: rgba(34,197,94,0.25); }
     .threat-badge.low::before { background: var(--low); }
 
-    /* ═══════════════════════════════════════════
-       CONFIDENCE BADGES
-    ═══════════════════════════════════════════ */
+    /* ═══ CONFIDENCE BADGES ═══ */
     .conf-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border: 1px solid;
+      display: inline-block; padding: 2px 7px;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid;
     }
-    .conf-badge.high-conf { background: rgba(74,144,217,0.12); color: var(--steel); border-color: rgba(74,144,217,0.3); }
-    .conf-badge.moderate-conf { background: var(--amber-light); color: var(--amber); border-color: rgba(240,180,41,0.3); }
-    .conf-badge.low-conf { background: var(--critical-bg); color: var(--critical); border-color: rgba(239,68,68,0.3); }
+    .conf-badge.high-conf { background: rgba(74,144,217,0.10); color: var(--steel); border-color: rgba(74,144,217,0.25); }
+    .conf-badge.moderate-conf { background: var(--amber-light); color: var(--amber); border-color: rgba(240,180,41,0.25); }
+    .conf-badge.low-conf { background: var(--critical-bg); color: var(--critical); border-color: rgba(239,68,68,0.25); }
 
-    /* ═══════════════════════════════════════════
-       TABLES
-    ═══════════════════════════════════════════ */
+    /* ═══ TABLES ═══ */
     .intel-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-      border: 1px solid var(--border);
+      width: 100%; border-collapse: collapse; font-size: 10px;
+      border: 1px solid var(--border); margin-bottom: 14px;
     }
     .intel-table thead th {
-      padding: 8px 12px;
-      text-align: left;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      background: var(--surface);
+      padding: 7px 10px; text-align: left;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-muted); background: var(--surface);
       border-bottom: 2px solid var(--steel);
     }
     .intel-table tbody td {
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: top;
-      line-height: 1.5;
-      color: var(--text-secondary);
+      padding: 6px 10px; border-bottom: 1px solid var(--border);
+      vertical-align: top; line-height: 1.5; color: var(--text-secondary);
     }
     .intel-table tbody tr:last-child td { border-bottom: none; }
     .intel-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.01); }
-    .intel-table tbody tr:hover { background: rgba(74,144,217,0.04); }
 
-    /* ═══════════════════════════════════════════
-       EXECUTIVE SUMMARY BOX
-    ═══════════════════════════════════════════ */
+    /* ═══ EXEC SUMMARY ═══ */
     .exec-summary-box {
-      background: rgba(74,144,217,0.06);
+      background: rgba(74,144,217,0.05);
+      border: 1px solid rgba(74,144,217,0.12);
       border-left: 3px solid var(--steel);
-      border: 1px solid rgba(74,144,217,0.15);
-      border-left: 3px solid var(--steel);
-      padding: 18px 22px;
-      margin-bottom: 20px;
+      padding: 16px 20px; margin-bottom: 18px;
     }
     .exec-summary-box h4 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--steel);
-      margin-bottom: 8px;
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--steel); margin-bottom: 6px;
     }
-    .exec-summary-box p {
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.75;
-    }
+    .exec-summary-box p { font-size: 11px; color: var(--text-secondary); line-height: 1.75; }
 
-    /* ═══════════════════════════════════════════
-       STAT CARDS
-    ═══════════════════════════════════════════ */
+    /* ═══ STAT CARDS ═══ */
     .stat-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-bottom: 20px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px; margin-bottom: 18px;
     }
     .stat-card {
-      padding: 14px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      text-align: center;
+      padding: 12px; border: 1px solid var(--border);
+      background: var(--surface); text-align: center;
     }
     .stat-card .stat-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1;
-      margin-bottom: 4px;
+      font-family: 'JetBrains Mono', monospace; font-size: 24px;
+      font-weight: 800; line-height: 1; margin-bottom: 3px;
     }
     .stat-card .stat-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);
     }
     .stat-card.critical-stat .stat-value { color: var(--critical); }
-    .stat-card.critical-stat { border-color: rgba(239,68,68,0.2); }
+    .stat-card.critical-stat { border-color: rgba(239,68,68,0.15); }
     .stat-card.high-stat .stat-value { color: var(--high); }
-    .stat-card.high-stat { border-color: rgba(249,115,22,0.2); }
+    .stat-card.high-stat { border-color: rgba(249,115,22,0.15); }
     .stat-card.moderate-stat .stat-value { color: var(--moderate); }
-    .stat-card.moderate-stat { border-color: rgba(234,179,8,0.2); }
+    .stat-card.moderate-stat { border-color: rgba(234,179,8,0.15); }
     .stat-card.low-stat .stat-value { color: var(--low); }
-    .stat-card.low-stat { border-color: rgba(34,197,94,0.2); }
+    .stat-card.low-stat { border-color: rgba(34,197,94,0.15); }
     .stat-card.accent-stat .stat-value { color: var(--steel); }
-    .stat-card.accent-stat { border-color: rgba(74,144,217,0.2); }
+    .stat-card.accent-stat { border-color: rgba(74,144,217,0.15); }
 
-    /* ═══════════════════════════════════════════
-       IMAGE CARDS
-    ═══════════════════════════════════════════ */
-    .image-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .image-card {
-      overflow: hidden;
-      border: 1px solid var(--border);
-      background: var(--surface);
-    }
-    .image-card img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      display: block;
-    }
-    .image-card .image-caption {
-      padding: 10px 12px;
-    }
-    .image-card .image-caption .caption-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 2px;
-    }
-    .image-card .image-caption .caption-meta {
-      font-size: 10px;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
+    /* ═══ IMAGE CARDS ═══ */
+    .image-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    .image-card { overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
+    .image-card img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .image-card .image-caption { padding: 8px 10px; }
+    .image-card .image-caption .caption-title { font-size: 10px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .image-card .image-caption .caption-meta { font-size: 9px; color: var(--text-muted); }
     .image-card .image-caption .caption-type {
-      display: inline-block;
-      padding: 2px 6px;
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
-      color: var(--steel);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-top: 4px;
+      display: inline-block; padding: 1px 5px; background: var(--surface-elevated);
+      border: 1px solid var(--border); color: var(--steel);
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 700;
+      letter-spacing: 0.5px; text-transform: uppercase; margin-top: 3px;
     }
 
-    .image-full {
-      overflow: hidden;
-      border: 1px solid var(--border);
-      margin-bottom: 20px;
-    }
-    .image-full img {
-      width: 100%;
-      max-height: 300px;
-      object-fit: cover;
-      display: block;
-    }
-    .image-full .image-caption {
-      padding: 10px 14px;
-      background: var(--surface);
-    }
+    .image-full { overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; }
+    .image-full img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+    .image-full .image-caption { padding: 8px 12px; background: var(--surface); }
 
-    /* ═══════════════════════════════════════════
-       INDICATOR LISTS
-    ═══════════════════════════════════════════ */
-    .indicator-list {
-      list-style: none;
-      margin-bottom: 20px;
-    }
+    /* ═══ INDICATOR LISTS ═══ */
+    .indicator-list { list-style: none; margin-bottom: 16px; }
     .indicator-list li {
-      padding: 7px 0 7px 18px;
-      position: relative;
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.6;
+      padding: 6px 0 6px 16px; position: relative;
+      font-size: 11px; color: var(--text-secondary); line-height: 1.6;
       border-bottom: 1px solid var(--border);
     }
     .indicator-list li:last-child { border-bottom: none; }
     .indicator-list li::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 12px;
-      width: 6px; height: 6px;
-      background: var(--steel);
+      content: ''; position: absolute; left: 0; top: 11px;
+      width: 5px; height: 5px; background: var(--steel);
     }
     .indicator-list li.critical-ind::before { background: var(--critical); }
     .indicator-list li.high-ind::before { background: var(--high); }
 
-    /* ═══════════════════════════════════════════
-       PRIORITY ACTIONS
-    ═══════════════════════════════════════════ */
-    .action-item {
-      display: flex;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-    }
+    /* ═══ PRIORITY ACTIONS ═══ */
+    .action-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .action-item:last-child { border-bottom: none; }
     .action-num {
-      width: 26px; height: 26px;
-      min-width: 26px;
-      background: var(--steel);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 800;
-      margin-top: 2px;
+      width: 24px; height: 24px; min-width: 24px;
+      background: var(--steel); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800; margin-top: 2px;
     }
-    .action-content h4 {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 3px;
-    }
-    .action-content p {
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
+    .action-content h4 { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .action-content p { font-size: 10px; color: var(--text-secondary); line-height: 1.6; }
 
-    /* ═══════════════════════════════════════════
-       TWO / THREE COLUMN
-    ═══════════════════════════════════════════ */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    /* ═══ LAYOUT ═══ */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 
-    /* ═══════════════════════════════════════════
-       ASSESSMENT BOX
-    ═══════════════════════════════════════════ */
-    .assessment-box {
-      padding: 18px 22px;
-      margin-bottom: 16px;
-      border: 1px solid;
-      border-left-width: 3px;
-    }
-    .assessment-box.critical-box { background: var(--critical-bg); border-color: rgba(239,68,68,0.25); border-left-color: var(--critical); }
-    .assessment-box.high-box { background: var(--high-bg); border-color: rgba(249,115,22,0.25); border-left-color: var(--high); }
-    .assessment-box.moderate-box { background: var(--moderate-bg); border-color: rgba(234,179,8,0.25); border-left-color: var(--moderate); }
-    .assessment-box.low-box { background: var(--low-bg); border-color: rgba(34,197,94,0.25); border-left-color: var(--low); }
-    .assessment-box.accent-box { background: var(--steel-light); border-color: rgba(74,144,217,0.25); border-left-color: var(--steel); }
-    .assessment-box h4 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--text);
-    }
-    .assessment-box p {
-      font-size: 11px;
-      line-height: 1.7;
-      color: var(--text-secondary);
-    }
-
-    /* ═══════════════════════════════════════════
-       ANALYST CALLOUT
-    ═══════════════════════════════════════════ */
+    /* ═══ ANALYST CALLOUT ═══ */
     .analyst-callout {
-      background: var(--surface);
-      border: 1px solid var(--border-accent);
-      border-left: 3px solid var(--amber);
-      padding: 18px 22px;
-      margin-bottom: 16px;
+      background: var(--surface); border: 1px solid var(--border-accent);
+      border-left: 3px solid var(--amber); padding: 14px 18px; margin-bottom: 14px;
     }
     .analyst-callout h4 {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--amber);
-      margin-bottom: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--amber); margin-bottom: 4px;
     }
-    .analyst-callout p {
-      font-size: 12px;
-      line-height: 1.7;
-      color: var(--text-secondary);
-    }
+    .analyst-callout p { font-size: 11px; line-height: 1.7; color: var(--text-secondary); }
 
-    /* ═══════════════════════════════════════════
-       SUB HEADINGS
-    ═══════════════════════════════════════════ */
     .sub-heading {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 12px;
-      padding-bottom: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+      color: var(--text); margin-bottom: 10px; padding-bottom: 5px;
       border-bottom: 1px solid var(--border);
     }
 
-    /* ═══════════════════════════════════════════
-       VULNERABILITY CARD
-    ═══════════════════════════════════════════ */
-    .vuln-card {
-      border: 1px solid var(--border);
-      overflow: hidden;
-      margin-bottom: 12px;
-    }
+    /* ═══ ASSESSMENT BOX ═══ */
+    .assessment-box { padding: 14px 18px; margin-bottom: 14px; border: 1px solid; border-left-width: 3px; }
+    .assessment-box.critical-box { background: var(--critical-bg); border-color: rgba(239,68,68,0.2); border-left-color: var(--critical); }
+    .assessment-box.high-box { background: var(--high-bg); border-color: rgba(249,115,22,0.2); border-left-color: var(--high); }
+    .assessment-box.moderate-box { background: var(--moderate-bg); border-color: rgba(234,179,8,0.2); border-left-color: var(--moderate); }
+    .assessment-box.low-box { background: var(--low-bg); border-color: rgba(34,197,94,0.2); border-left-color: var(--low); }
+    .assessment-box.accent-box { background: var(--steel-light); border-color: rgba(74,144,217,0.2); border-left-color: var(--steel); }
+    .assessment-box h4 { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+    .assessment-box p { font-size: 10px; line-height: 1.7; color: var(--text-secondary); }
+
+    /* ═══ VULNERABILITY CARD ═══ */
+    .vuln-card { border: 1px solid var(--border); overflow: hidden; margin-bottom: 10px; }
     .vuln-card .vuln-header {
-      padding: 8px 12px;
-      background: var(--surface);
+      padding: 6px 10px; background: var(--surface);
       border-bottom: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
+      color: var(--text); display: flex; justify-content: space-between; align-items: center;
     }
-    .vuln-card .vuln-body {
-      padding: 12px;
-      background: var(--surface-card);
-    }
-    .vuln-card .vuln-body img {
-      width: 100%;
-      height: 140px;
-      object-fit: cover;
-      margin-bottom: 8px;
-    }
-    .vuln-card .vuln-detail {
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
+    .vuln-card .vuln-body { padding: 10px; background: var(--surface-card); }
+    .vuln-card .vuln-body img { width: 100%; height: 120px; object-fit: cover; margin-bottom: 6px; }
+    .vuln-card .vuln-detail { font-size: 10px; color: var(--text-secondary); line-height: 1.6; }
     .vuln-card .vuln-detail strong { color: var(--text); }
 
-    /* ═══════════════════════════════════════════
-       SOURCES
-    ═══════════════════════════════════════════ */
-    .source-item {
-      display: flex;
-      gap: 10px;
-      padding: 6px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 11px;
-    }
+    /* ═══ SOURCES ═══ */
+    .source-item { display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 10px; }
     .source-item:last-child { border-bottom: none; }
-    .source-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      color: var(--steel);
-      min-width: 24px;
-    }
-    .source-text {
-      color: var(--text-secondary);
-      line-height: 1.5;
-    }
+    .source-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--steel); min-width: 22px; }
+    .source-text { color: var(--text-secondary); line-height: 1.5; }
     .source-text a { color: var(--steel); text-decoration: none; }
 
-    /* ═══════════════════════════════════════════
-       SENTIMENT ANALYSIS
-    ═══════════════════════════════════════════ */
+    /* ═══ SENTIMENT ANALYSIS ═══ */
     .sentiment-summary {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin-bottom: 18px;
     }
     .sentiment-stat {
-      padding: 14px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      text-align: center;
+      padding: 12px; border: 1px solid var(--border);
+      background: var(--surface); text-align: center;
     }
     .sentiment-stat .s-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1;
-      margin-bottom: 4px;
+      font-family: 'JetBrains Mono', monospace; font-size: 20px;
+      font-weight: 800; line-height: 1; margin-bottom: 3px;
     }
     .sentiment-stat .s-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);
     }
     .sentiment-stat.positive .s-value { color: var(--positive); }
     .sentiment-stat.negative .s-value { color: var(--negative); }
-    .sentiment-stat.neutral .s-value { color: var(--neutral); }
+    .sentiment-stat.neutral .s-value { color: var(--neutral-color); }
     .sentiment-stat.overall .s-value { color: var(--steel); }
 
-    .sentiment-bar-container {
-      margin-bottom: 12px;
-    }
-    .sentiment-bar-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-    .sentiment-bar-label .sbl-name {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .sentiment-bar-label .sbl-values {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      color: var(--text-muted);
-    }
-    .sentiment-bar {
-      height: 18px;
-      display: flex;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      background: var(--surface);
-    }
+    .sentiment-bar-container { margin-bottom: 10px; }
+    .sentiment-bar-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+    .sentiment-bar-label .sbl-name { font-size: 10px; font-weight: 600; color: var(--text); }
+    .sentiment-bar-label .sbl-values { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted); }
+    .sentiment-bar { height: 16px; display: flex; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
     .sentiment-bar .sb-positive { background: var(--positive); }
-    .sentiment-bar .sb-neutral { background: var(--neutral); }
+    .sentiment-bar .sb-neutral { background: var(--neutral-color); }
     .sentiment-bar .sb-negative { background: var(--negative); }
 
     .trending-topic {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
-      font-size: 11px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 10px; border-bottom: 1px solid var(--border); font-size: 10px;
     }
     .trending-topic:last-child { border-bottom: none; }
     .trending-topic .tt-name { color: var(--text); font-weight: 600; }
     .trending-topic .tt-sentiment {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border: 1px solid;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
+      text-transform: uppercase; padding: 2px 6px; border: 1px solid;
     }
-    .trending-topic .tt-sentiment.pos { color: var(--positive); background: var(--positive-bg); border-color: rgba(34,197,94,0.3); }
-    .trending-topic .tt-sentiment.neg { color: var(--negative); background: var(--negative-bg); border-color: rgba(239,68,68,0.3); }
-    .trending-topic .tt-sentiment.neu { color: var(--neutral); background: var(--neutral-bg); border-color: rgba(100,116,139,0.3); }
-    .trending-topic .tt-volume {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--text-muted);
+    .trending-topic .tt-sentiment.pos { color: var(--positive); background: var(--positive-bg); border-color: rgba(34,197,94,0.25); }
+    .trending-topic .tt-sentiment.neg { color: var(--negative); background: var(--negative-bg); border-color: rgba(239,68,68,0.25); }
+    .trending-topic .tt-sentiment.neu { color: var(--neutral-color); background: var(--neutral-bg); border-color: rgba(100,116,139,0.25); }
+    .trending-topic .tt-volume { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-muted); }
+
+    /* ═══ X / TWITTER SENTIMENT ═══ */
+    .x-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+    }
+    .x-logo {
+      width: 24px; height: 24px; background: var(--x-blue); display: flex;
+      align-items: center; justify-content: center; font-weight: 900;
+      font-family: 'Inter', sans-serif; font-size: 14px; color: white;
+    }
+    .x-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin-bottom: 16px;
+    }
+    .x-stat {
+      padding: 10px; border: 1px solid rgba(29,155,240,0.15);
+      background: rgba(29,155,240,0.04); text-align: center;
+    }
+    .x-stat .x-value {
+      font-family: 'JetBrains Mono', monospace; font-size: 18px;
+      font-weight: 800; line-height: 1; margin-bottom: 2px; color: var(--x-blue);
+    }
+    .x-stat .x-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);
     }
 
-    /* ═══════════════════════════════════════════
-       EXPLOSION DETECTION
-    ═══════════════════════════════════════════ */
+    /* Tweet evidence cards */
+    .tweet-card {
+      border: 1px solid var(--border); background: var(--surface);
+      padding: 10px 12px; margin-bottom: 8px;
+    }
+    .tweet-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+    }
+    .tweet-user { display: flex; align-items: center; gap: 6px; }
+    .tweet-avatar {
+      width: 28px; height: 28px; background: var(--surface-elevated);
+      border: 1px solid var(--border); display: flex;
+      align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      font-weight: 700; color: var(--steel);
+    }
+    .tweet-name { font-size: 11px; font-weight: 700; color: var(--text); }
+    .tweet-handle { font-size: 9px; color: var(--text-muted); }
+    .tweet-verified {
+      display: inline-block; width: 12px; height: 12px;
+      background: var(--x-blue); color: white; font-size: 8px;
+      font-weight: 800; text-align: center; line-height: 12px; margin-left: 3px;
+    }
+    .tweet-time { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted); }
+    .tweet-text { font-size: 11px; color: var(--text); line-height: 1.6; margin-bottom: 6px; }
+    .tweet-footer {
+      display: flex; gap: 14px; align-items: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-muted);
+    }
+    .tweet-sentiment-tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
+      text-transform: uppercase; padding: 2px 6px; border: 1px solid;
+    }
+    .tweet-sentiment-tag.pos { color: var(--positive); background: var(--positive-bg); border-color: rgba(34,197,94,0.25); }
+    .tweet-sentiment-tag.neg { color: var(--negative); background: var(--negative-bg); border-color: rgba(239,68,68,0.25); }
+    .tweet-sentiment-tag.neu { color: var(--neutral-color); background: var(--neutral-bg); border-color: rgba(100,116,139,0.25); }
+
+    /* Hashtag tracking */
+    .hashtag-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 10px; border-bottom: 1px solid var(--border); font-size: 10px;
+    }
+    .hashtag-row:last-child { border-bottom: none; }
+    .hashtag-name { color: var(--x-blue); font-weight: 700; }
+    .hashtag-change { font-family: 'JetBrains Mono', monospace; font-size: 9px; }
+    .hashtag-change.up { color: var(--critical); }
+    .hashtag-change.down { color: var(--positive); }
+
+    /* ═══ FIRE DETECTION (NASA FIRMS) ═══ */
+    .fire-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin-bottom: 16px;
+    }
+    .fire-stat {
+      padding: 12px; border: 1px solid var(--border);
+      background: var(--surface); text-align: center;
+    }
+    .fire-stat .f-value {
+      font-family: 'JetBrains Mono', monospace; font-size: 20px;
+      font-weight: 800; line-height: 1; margin-bottom: 3px;
+    }
+    .fire-stat .f-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);
+    }
+    .fire-stat.total .f-value { color: var(--high); }
+    .fire-stat.significant .f-value { color: var(--critical); }
+    .fire-stat.military .f-value { color: #dc2626; }
+    .fire-stat.timespan .f-value { color: var(--steel); font-size: 14px; }
+
+    .fire-detection-row {
+      display: grid; grid-template-columns: 60px 1fr 80px 60px 70px 90px;
+      gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--border);
+      font-size: 9px; align-items: center;
+    }
+    .fire-detection-row.header {
+      background: var(--surface); font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 1px; font-size: 7px; border-bottom: 2px solid var(--steel);
+    }
+    .fire-detection-row .fire-class {
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 700;
+      text-transform: uppercase; padding: 2px 5px; text-align: center; border: 1px solid;
+    }
+    .fire-class.military { color: #dc2626; background: rgba(220,38,38,0.10); border-color: rgba(220,38,38,0.25); }
+    .fire-class.significant { color: var(--high); background: var(--high-bg); border-color: rgba(249,115,22,0.25); }
+    .fire-class.standard { color: var(--text-muted); background: var(--surface); border-color: var(--border); }
+
+    /* ═══ EXPLOSION DETECTION ═══ */
     .explosion-summary {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin-bottom: 16px;
     }
     .explosion-stat {
-      padding: 14px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      text-align: center;
+      padding: 12px; border: 1px solid var(--border);
+      background: var(--surface); text-align: center;
     }
     .explosion-stat .e-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1;
-      margin-bottom: 4px;
+      font-family: 'JetBrains Mono', monospace; font-size: 20px;
+      font-weight: 800; line-height: 1; margin-bottom: 3px;
     }
     .explosion-stat .e-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted);
     }
     .explosion-stat.total .e-value { color: var(--critical); }
     .explosion-stat.confirmed .e-value { color: var(--high); }
     .explosion-stat.unconfirmed .e-value { color: var(--moderate); }
-    .explosion-stat.timespan .e-value { color: var(--steel); font-size: 16px; }
+    .explosion-stat.timespan .e-value { color: var(--steel); font-size: 14px; }
 
     .explosion-event {
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
-      background: var(--surface);
+      border: 1px solid var(--border); margin-bottom: 10px; background: var(--surface);
     }
     .explosion-event-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      background: var(--surface-card);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; background: var(--surface-card);
       border-bottom: 1px solid var(--border);
     }
     .explosion-event-header .event-id {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--critical);
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      font-weight: 700; color: var(--critical);
     }
     .explosion-event-header .event-status {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border: 1px solid;
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
+      text-transform: uppercase; padding: 2px 6px; border: 1px solid;
     }
-    .explosion-event-header .event-status.confirmed { color: var(--critical); background: var(--critical-bg); border-color: rgba(239,68,68,0.3); }
-    .explosion-event-header .event-status.unconfirmed { color: var(--moderate); background: var(--moderate-bg); border-color: rgba(234,179,8,0.3); }
+    .explosion-event-header .event-status.confirmed { color: var(--critical); background: var(--critical-bg); border-color: rgba(239,68,68,0.25); }
+    .explosion-event-header .event-status.unconfirmed { color: var(--moderate); background: var(--moderate-bg); border-color: rgba(234,179,8,0.25); }
     .explosion-event-body {
-      padding: 12px 14px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      padding: 10px 12px; display: grid;
+      grid-template-columns: 1fr 1fr; gap: 6px;
     }
-    .explosion-event-body .event-field {
-      font-size: 11px;
-    }
+    .explosion-event-body .event-field { font-size: 10px; }
     .explosion-event-body .event-field .ef-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 1px;
+      font-family: 'JetBrains Mono', monospace; font-size: 7px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1px;
     }
-    .explosion-event-body .event-field .ef-value {
-      color: var(--text);
-      font-weight: 500;
-    }
+    .explosion-event-body .event-field .ef-value { color: var(--text); font-weight: 500; }
     .explosion-event-detail {
-      padding: 0 14px 12px;
-      font-size: 11px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      grid-column: 1 / -1;
+      padding: 0 12px 10px; font-size: 10px;
+      color: var(--text-secondary); line-height: 1.6;
     }
     .explosion-images {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      padding: 0 14px 12px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; padding: 0 12px 10px;
     }
-    .explosion-images img {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      border: 1px solid var(--border);
-    }
+    .explosion-images img { width: 100%; height: 100px; object-fit: cover; border: 1px solid var(--border); }
 
-    /* ═══════════════════════════════════════════
-       BAR CHARTS
-    ═══════════════════════════════════════════ */
-    .chart-section {
-      margin-top: auto;
-      padding-top: 16px;
-    }
+    /* ═══ BAR CHARTS ═══ */
+    .chart-section { margin-top: 12px; }
     .chart-container {
-      border: 1px solid var(--border);
-      background: var(--surface);
-      padding: 16px 18px;
-      margin-bottom: 12px;
+      border: 1px solid var(--border); background: var(--surface);
+      padding: 14px 16px; margin-bottom: 10px;
     }
     .chart-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 12px;
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
     }
-    .bar-chart {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .bar-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .bar-label {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      min-width: 100px;
-      text-align: right;
-    }
+    .bar-chart { display: flex; flex-direction: column; gap: 6px; }
+    .bar-row { display: flex; align-items: center; gap: 8px; }
+    .bar-label { font-size: 9px; font-weight: 600; color: var(--text-secondary); min-width: 90px; text-align: right; }
     .bar-track {
-      flex: 1;
-      height: 20px;
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
+      flex: 1; height: 18px; background: var(--surface-card);
+      border: 1px solid var(--border); position: relative; overflow: hidden;
     }
     .bar-fill {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding-right: 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      font-weight: 700;
-      color: white;
-      min-width: 28px;
-      transition: width 0.3s ease;
+      height: 100%; display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 5px; font-family: 'JetBrains Mono', monospace;
+      font-size: 8px; font-weight: 700; color: white; min-width: 24px;
     }
     .bar-fill.critical-bar { background: var(--critical); }
     .bar-fill.high-bar { background: var(--high); }
@@ -1057,61 +671,44 @@
     .bar-fill.accent-bar { background: var(--steel); }
     .bar-fill.olive-bar { background: var(--olive); }
     .bar-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-muted);
-      min-width: 40px;
-      text-align: right;
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      font-weight: 700; color: var(--text-muted); min-width: 36px; text-align: right;
     }
 
-    /* ═══════════════════════════════════════════
-       PRINT STYLES
-    ═══════════════════════════════════════════ */
+    /* ═══ PRINT ═══ */
     @media print {
       body { background: var(--bg); }
-      .page-container { max-width: none; margin: 0; padding-top: 76px; }
-      .page-wrapper {
-        page-break-after: always;
-        height: 100vh;
-        padding: 28px 24px 56px;
-        margin: 0;
-      }
+      .page-container { max-width: none; margin: 0; padding-top: 72px; }
+      .page-wrapper { page-break-after: always; height: 100vh; padding: 24px 24px 52px; margin: 0; }
       .page-wrapper:last-child { page-break-after: avoid; }
       .classification-banner, .classification-banner-bottom, .page-header-bar, .watermark {
-        position: fixed !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        position: fixed !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;
       }
       .card, .analyst-callout, .intel-table thead th, .action-num,
       .vuln-card .vuln-header, .threat-badge, .conf-badge, .stat-card,
       .exec-summary-box, .assessment-box, .cover-classification,
       .cover-meta-item, .sentiment-bar, .bar-fill, .explosion-event,
-      .chart-container, .sentiment-stat, .explosion-stat,
+      .chart-container, .sentiment-stat, .explosion-stat, .fire-stat,
+      .x-stat, .tweet-card, .tweet-sentiment-tag, .fire-class,
       .cover-hero, .page-header-bar, .page-header-bar::after {
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
       }
     }
   </style>
 </head>
 
 <body>
-  <!-- CLASSIFICATION BANNERS -->
   <div class="classification-banner {{CLASSIFICATION_CLASS}}">{{CLASSIFICATION}}</div>
   <div class="classification-banner-bottom {{CLASSIFICATION_CLASS}}">{{CLASSIFICATION}}</div>
-
-  <!-- WATERMARK -->
   <div class="watermark">{{CLASSIFICATION}}</div>
 
-  <!-- HEADER BAR -->
   <div class="page-header-bar">
     <div class="logo-area">
       {{#if LOGO}}<img src="{{LOGO}}" alt="Logo">{{/if}}
       <span class="org-name">{{ORG_NAME}}</span>
     </div>
     <div class="header-right">
-      <span class="id-badge">{{REPORT_ID}}</span>
+      <span style="color:var(--text-muted);letter-spacing:1px;">{{REPORT_ID}}</span>
       <span class="date-badge">{{REPORT_DATE}}</span>
     </div>
   </div>
@@ -1120,9 +717,7 @@
     {{#each PAGES}}
     <div class="page-wrapper">
 
-      <!-- ╔═══════════════════════════════════╗
-           ║        COVER PAGE                 ║
-           ╚═══════════════════════════════════╝ -->
+      {{!-- ══════════ COVER PAGE ══════════ --}}
       {{#if is_cover_page}}
       <div class="cover-hero">
         <div class="cover-classification {{../CLASSIFICATION_CLASS}}">{{../CLASSIFICATION}}</div>
@@ -1198,9 +793,7 @@
       {{/if}}
       {{/if}}
 
-      <!-- ╔═══════════════════════════════════╗
-           ║     THREAT MATRIX PAGE            ║
-           ╚═══════════════════════════════════╝ -->
+      {{!-- ══════════ THREAT MATRIX PAGE ══════════ --}}
       {{#if is_threat_matrix_page}}
       <div class="card">
         <div class="section-eyebrow">Threat Assessment</div>
@@ -1209,13 +802,7 @@
 
         <table class="intel-table">
           <thead>
-            <tr>
-              <th>Domain</th>
-              <th>Threat Level</th>
-              <th>Vector</th>
-              <th>Status</th>
-              <th>Key Concerns</th>
-            </tr>
+            <tr><th>Domain</th><th>Threat Level</th><th>Vector</th><th>Status</th><th>Key Concerns</th></tr>
           </thead>
           <tbody>
             {{#each threat_rows}}
@@ -1252,9 +839,7 @@
             {{#each bars}}
             <div class="bar-row">
               <span class="bar-label">{{label}}</span>
-              <div class="bar-track">
-                <div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div>
-              </div>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
               <span class="bar-value">{{value}}</span>
             </div>
             {{/each}}
@@ -1265,9 +850,7 @@
       {{/if}}
       {{/if}}
 
-      <!-- ╔═══════════════════════════════════╗
-           ║     ANALYSIS SECTION PAGE         ║
-           ╚═══════════════════════════════════╝ -->
+      {{!-- ══════════ ANALYSIS SECTION PAGE ══════════ --}}
       {{#if is_analysis_page}}
       <div class="card">
         <div class="section-eyebrow">{{section_eyebrow}}</div>
@@ -1275,35 +858,25 @@
         <div class="section-desc">{{section_desc}}</div>
 
         {{#if assessment_confidence}}
-        <div style="margin-bottom: 16px;">
-          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;color:var(--text-muted);margin-right:8px;letter-spacing:1px;text-transform:uppercase;">Assessment confidence:</span>
+        <div style="margin-bottom:14px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;color:var(--text-muted);margin-right:6px;letter-spacing:1px;text-transform:uppercase;">Assessment confidence:</span>
           {{{safe assessment_confidence_html}}}
         </div>
         {{/if}}
 
         {{#if analysis_table}}
         <table class="intel-table">
-          <thead>
-            <tr>
-              {{#each analysis_table.headers}}
-              <th>{{this}}</th>
-              {{/each}}
-            </tr>
-          </thead>
+          <thead><tr>{{#each analysis_table.headers}}<th>{{this}}</th>{{/each}}</tr></thead>
           <tbody>
             {{#each analysis_table.rows}}
-            <tr>
-              {{#each cells}}
-              <td>{{{safe this}}}</td>
-              {{/each}}
-            </tr>
+            <tr>{{#each cells}}<td>{{{safe this}}}</td>{{/each}}</tr>
             {{/each}}
           </tbody>
         </table>
         {{/if}}
 
         {{#if analysis_text}}
-        <div style="font-size:12px;color:var(--text-secondary);line-height:1.75;margin-bottom:16px;">
+        <div style="font-size:11px;color:var(--text-secondary);line-height:1.75;margin-bottom:14px;">
           {{{safe analysis_text}}}
         </div>
         {{/if}}
@@ -1328,10 +901,7 @@
       <div class="two-col">
         {{#each vulnerability_cards}}
         <div class="vuln-card">
-          <div class="vuln-header">
-            <span>{{title}}</span>
-            {{{safe threat_badge_html}}}
-          </div>
+          <div class="vuln-header"><span>{{title}}</span>{{{safe threat_badge_html}}}</div>
           <div class="vuln-body">
             {{#if image_url}}<img src="{{image_url}}" alt="{{title}}">{{/if}}
             <div class="vuln-detail">{{{safe details}}}</div>
@@ -1357,9 +927,7 @@
             {{#each bars}}
             <div class="bar-row">
               <span class="bar-label">{{label}}</span>
-              <div class="bar-track">
-                <div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div>
-              </div>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
               <span class="bar-value">{{value}}</span>
             </div>
             {{/each}}
@@ -1370,16 +938,132 @@
       {{/if}}
       {{/if}}
 
-      <!-- ╔═══════════════════════════════════╗
-           ║   SENTIMENT ANALYSIS PAGE         ║
-           ╚═══════════════════════════════════╝ -->
+      {{!-- ══════════ X / TWITTER SENTIMENT PAGE ══════════ --}}
+      {{#if is_x_sentiment_page}}
+      <div class="card">
+        <div class="x-header">
+          <div class="x-logo">X</div>
+          <div>
+            <div class="section-eyebrow">Social Intelligence</div>
+            <div class="section-title">{{section_title}}</div>
+          </div>
+        </div>
+        <div class="section-desc">{{section_desc}}</div>
+
+        <div class="x-summary">
+          <div class="x-stat">
+            <div class="x-value">{{overall_sentiment}}</div>
+            <div class="x-label">Overall Sentiment</div>
+          </div>
+          <div class="x-stat">
+            <div class="x-value">{{overall_score}}</div>
+            <div class="x-label">Composite Score</div>
+          </div>
+          <div class="x-stat">
+            <div class="x-value">{{total_posts}}</div>
+            <div class="x-label">Posts Analyzed</div>
+          </div>
+          <div class="x-stat">
+            <div class="x-value">{{time_period}}</div>
+            <div class="x-label">Window</div>
+          </div>
+        </div>
+
+        {{#if keyword_sentiment}}
+        <div class="sub-heading">Sentiment by Keyword / Hashtag</div>
+        {{#each keyword_sentiment}}
+        <div class="sentiment-bar-container">
+          <div class="sentiment-bar-label">
+            <span class="sbl-name">{{keyword}}</span>
+            <span class="sbl-values">+{{positive}}% / {{neutral}}% / -{{negative}}% ({{volume}} posts)</span>
+          </div>
+          <div class="sentiment-bar">
+            <div class="sb-positive" style="width:{{positive}}%;"></div>
+            <div class="sb-neutral" style="width:{{neutral}}%;"></div>
+            <div class="sb-negative" style="width:{{negative}}%;"></div>
+          </div>
+        </div>
+        {{/each}}
+        {{/if}}
+      </div>
+
+      {{#if trending_hashtags}}
+      <div class="card">
+        <div class="sub-heading">Trending Hashtags</div>
+        {{#each trending_hashtags}}
+        <div class="hashtag-row">
+          <span class="hashtag-name">{{hashtag}}</span>
+          <span class="tt-sentiment {{sentiment_class}}">{{sentiment}}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-muted);">{{volume}} posts</span>
+          {{#if change}}<span class="hashtag-change">{{change}}</span>{{/if}}
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      {{#if evidence_tweets}}
+      <div class="card">
+        <div class="sub-heading">Evidence — Sample Posts</div>
+        {{#each evidence_tweets}}
+        <div class="tweet-card">
+          <div class="tweet-header">
+            <div class="tweet-user">
+              <div class="tweet-avatar">{{username.[0]}}</div>
+              <div>
+                <span class="tweet-name">{{username}}</span>
+                {{#if verified}}<span class="tweet-verified">✓</span>{{/if}}
+                <br><span class="tweet-handle">{{handle}}</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="tweet-sentiment-tag {{sentiment_class}}">{{sentiment}}</span>
+              <span class="tweet-time">{{timestamp}}</span>
+            </div>
+          </div>
+          <div class="tweet-text">{{{safe text}}}</div>
+          <div class="tweet-footer">
+            <span>RT {{retweets}}</span>
+            <span>♥ {{likes}}</span>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      {{#if analyst_assessment}}
+      <div class="analyst-callout">
+        <h4>Social Sentiment Assessment</h4>
+        <p>{{{safe analyst_assessment}}}</p>
+      </div>
+      {{/if}}
+
+      {{#if charts}}
+      <div class="chart-section">
+        {{#each charts}}
+        <div class="chart-container">
+          <div class="chart-title">{{title}}</div>
+          <div class="bar-chart">
+            {{#each bars}}
+            <div class="bar-row">
+              <span class="bar-label">{{label}}</span>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
+              <span class="bar-value">{{value}}</span>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+      {{/if}}
+
+      {{!-- ══════════ SENTIMENT ANALYSIS PAGE ══════════ --}}
       {{#if is_sentiment_page}}
       <div class="card">
         <div class="section-eyebrow">Sentiment Intelligence</div>
         <div class="section-title">{{section_title}}</div>
         <div class="section-desc">{{section_desc}}</div>
 
-        <!-- Summary Stats -->
         <div class="sentiment-summary">
           <div class="sentiment-stat overall">
             <div class="s-value">{{overall_sentiment}}</div>
@@ -1399,7 +1083,6 @@
           </div>
         </div>
 
-        <!-- Category Breakdown Bars -->
         {{#if categories}}
         <div class="sub-heading">Sentiment by Source Category</div>
         {{#each categories}}
@@ -1414,14 +1097,13 @@
             <div class="sb-negative" style="width:{{negative}}%;"></div>
           </div>
           {{#if key_narrative}}
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;font-style:italic;">{{key_narrative}}</div>
+          <div style="font-size:9px;color:var(--text-muted);margin-top:2px;font-style:italic;">{{key_narrative}}</div>
           {{/if}}
         </div>
         {{/each}}
         {{/if}}
       </div>
 
-      <!-- Trending Topics -->
       {{#if trending_topics}}
       <div class="card">
         <div class="section-eyebrow">Trending Narratives</div>
@@ -1452,9 +1134,7 @@
             {{#each bars}}
             <div class="bar-row">
               <span class="bar-label">{{label}}</span>
-              <div class="bar-track">
-                <div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div>
-              </div>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
               <span class="bar-value">{{value}}</span>
             </div>
             {{/each}}
@@ -1465,16 +1145,101 @@
       {{/if}}
       {{/if}}
 
-      <!-- ╔═══════════════════════════════════╗
-           ║   EXPLOSION DETECTION PAGE        ║
-           ╚═══════════════════════════════════╝ -->
+      {{!-- ══════════ FIRE DETECTION PAGE (NASA FIRMS) ══════════ --}}
+      {{#if is_fire_page}}
+      <div class="card">
+        <div class="section-eyebrow">NASA FIRMS — Thermal Detection</div>
+        <div class="section-title">{{section_title}}</div>
+        <div class="section-desc">{{section_desc}}</div>
+
+        <div class="fire-summary">
+          <div class="fire-stat total">
+            <div class="f-value">{{summary_total}}</div>
+            <div class="f-label">Total Detections</div>
+          </div>
+          <div class="fire-stat significant">
+            <div class="f-value">{{summary_significant}}</div>
+            <div class="f-label">Significant (>20MW)</div>
+          </div>
+          <div class="fire-stat military">
+            <div class="f-value">{{summary_military}}</div>
+            <div class="f-label">Military Grade (>50MW)</div>
+          </div>
+          <div class="fire-stat timespan">
+            <div class="f-value">{{summary_timespan}}</div>
+            <div class="f-label">Time Span</div>
+          </div>
+        </div>
+
+        {{#if area_summary}}
+        <div class="sub-heading">Detection Summary by Area</div>
+        <table class="intel-table">
+          <thead><tr><th>Area</th><th>Count</th><th>Max FRP (MW)</th><th>Assessment</th></tr></thead>
+          <tbody>
+            {{#each area_summary}}
+            <tr>
+              <td style="font-weight:600;color:var(--text);">{{area}}</td>
+              <td>{{count}}</td>
+              <td>{{max_frp}}</td>
+              <td>{{assessment}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+        {{/if}}
+
+        {{#if detections}}
+        <div class="sub-heading">Individual Thermal Detections</div>
+        <div class="fire-detection-row header">
+          <span>Date/Time</span><span>Location</span><span>Brightness</span><span>FRP</span><span>Confidence</span><span>Classification</span>
+        </div>
+        {{#each detections}}
+        <div class="fire-detection-row">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-muted);">{{acq_date}}<br>{{acq_time}}</span>
+          <span style="color:var(--text);font-weight:500;">{{location_name}}</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--text-secondary);">{{bright_ti4}} K</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--high);">{{frp}} MW</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--text-secondary);">{{confidence}}</span>
+          <span class="fire-class {{classification_class}}">{{classification}}</span>
+        </div>
+        {{/each}}
+        {{/if}}
+      </div>
+
+      {{#if analyst_assessment}}
+      <div class="analyst-callout">
+        <h4>Thermal Analysis Note</h4>
+        <p>{{{safe analyst_assessment}}}</p>
+      </div>
+      {{/if}}
+
+      {{#if charts}}
+      <div class="chart-section">
+        {{#each charts}}
+        <div class="chart-container">
+          <div class="chart-title">{{title}}</div>
+          <div class="bar-chart">
+            {{#each bars}}
+            <div class="bar-row">
+              <span class="bar-label">{{label}}</span>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
+              <span class="bar-value">{{value}}</span>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+      {{/if}}
+
+      {{!-- ══════════ EXPLOSION DETECTION PAGE ══════════ --}}
       {{#if is_explosion_page}}
       <div class="card">
         <div class="section-eyebrow">Blast / Explosion Detection</div>
         <div class="section-title">{{section_title}}</div>
         <div class="section-desc">{{section_desc}}</div>
 
-        <!-- Detection Summary -->
         <div class="explosion-summary">
           <div class="explosion-stat total">
             <div class="e-value">{{summary_total}}</div>
@@ -1494,7 +1259,6 @@
           </div>
         </div>
 
-        <!-- Event Cards -->
         {{#each events}}
         <div class="explosion-event">
           <div class="explosion-event-header">
@@ -1502,44 +1266,16 @@
             <span class="event-status {{status_class}}">{{status}}</span>
           </div>
           <div class="explosion-event-body">
-            <div class="event-field">
-              <div class="ef-label">Timestamp</div>
-              <div class="ef-value">{{timestamp}}</div>
-            </div>
-            <div class="event-field">
-              <div class="ef-label">Location</div>
-              <div class="ef-value">{{location}}</div>
-            </div>
-            <div class="event-field">
-              <div class="ef-label">Magnitude</div>
-              <div class="ef-value">{{magnitude}}</div>
-            </div>
-            <div class="event-field">
-              <div class="ef-label">Confidence</div>
-              <div class="ef-value">{{confidence}}</div>
-            </div>
-            {{#if blast_radius}}
-            <div class="event-field">
-              <div class="ef-label">Est. Blast Radius</div>
-              <div class="ef-value">{{blast_radius}}</div>
-            </div>
-            {{/if}}
-            {{#if source}}
-            <div class="event-field">
-              <div class="ef-label">Detection Source</div>
-              <div class="ef-value">{{source}}</div>
-            </div>
-            {{/if}}
+            <div class="event-field"><div class="ef-label">Timestamp</div><div class="ef-value">{{timestamp}}</div></div>
+            <div class="event-field"><div class="ef-label">Location</div><div class="ef-value">{{location}}</div></div>
+            <div class="event-field"><div class="ef-label">Magnitude</div><div class="ef-value">{{magnitude}}</div></div>
+            <div class="event-field"><div class="ef-label">Confidence</div><div class="ef-value">{{confidence}}</div></div>
+            {{#if blast_radius}}<div class="event-field"><div class="ef-label">Est. Blast Radius</div><div class="ef-value">{{blast_radius}}</div></div>{{/if}}
+            {{#if source}}<div class="event-field"><div class="ef-label">Detection Source</div><div class="ef-value">{{source}}</div></div>{{/if}}
           </div>
-          {{#if details}}
-          <div class="explosion-event-detail">{{details}}</div>
-          {{/if}}
+          {{#if details}}<div class="explosion-event-detail">{{details}}</div>{{/if}}
           {{#if images}}
-          <div class="explosion-images">
-            {{#each images}}
-            <img src="{{url}}" alt="{{caption}}">
-            {{/each}}
-          </div>
+          <div class="explosion-images">{{#each images}}<img src="{{url}}" alt="{{caption}}">{{/each}}</div>
           {{/if}}
         </div>
         {{/each}}
@@ -1561,9 +1297,7 @@
             {{#each bars}}
             <div class="bar-row">
               <span class="bar-label">{{label}}</span>
-              <div class="bar-track">
-                <div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div>
-              </div>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
               <span class="bar-value">{{value}}</span>
             </div>
             {{/each}}
@@ -1574,9 +1308,7 @@
       {{/if}}
       {{/if}}
 
-      <!-- ╔═══════════════════════════════════╗
-           ║     SCENARIO / OUTLOOK PAGE       ║
-           ╚═══════════════════════════════════╝ -->
+      {{!-- ══════════ SCENARIO / OUTLOOK PAGE ══════════ --}}
       {{#if is_scenario_page}}
       <div class="card">
         <div class="section-eyebrow">Predictive Outlook</div>
@@ -1586,14 +1318,7 @@
         {{#if scenarios}}
         <div class="sub-heading">Scenario Matrix</div>
         <table class="intel-table">
-          <thead>
-            <tr>
-              <th>Horizon</th>
-              <th>Most Likely</th>
-              <th>Escalation Risk</th>
-              <th>Decision Triggers</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Horizon</th><th>Most Likely</th><th>Escalation Risk</th><th>Decision Triggers</th></tr></thead>
           <tbody>
             {{#each scenarios}}
             <tr>
@@ -1612,19 +1337,11 @@
         <div class="two-col">
           <div>
             <div class="sub-heading">Escalation Indicators</div>
-            <ul class="indicator-list">
-              {{#each escalation_indicators}}
-              <li class="critical-ind">{{this}}</li>
-              {{/each}}
-            </ul>
+            <ul class="indicator-list">{{#each escalation_indicators}}<li class="critical-ind">{{this}}</li>{{/each}}</ul>
           </div>
           <div>
             <div class="sub-heading">De-escalation Indicators</div>
-            <ul class="indicator-list">
-              {{#each deescalation_indicators}}
-              <li>{{this}}</li>
-              {{/each}}
-            </ul>
+            <ul class="indicator-list">{{#each deescalation_indicators}}<li>{{this}}</li>{{/each}}</ul>
           </div>
         </div>
         {{/if}}
@@ -1639,9 +1356,7 @@
             {{#each bars}}
             <div class="bar-row">
               <span class="bar-label">{{label}}</span>
-              <div class="bar-track">
-                <div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div>
-              </div>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
               <span class="bar-value">{{value}}</span>
             </div>
             {{/each}}
@@ -1652,9 +1367,7 @@
       {{/if}}
       {{/if}}
 
-      <!-- ╔═══════════════════════════════════╗
-           ║    PRIORITY ACTIONS PAGE          ║
-           ╚═══════════════════════════════════╝ -->
+      {{!-- ══════════ PRIORITY ACTIONS PAGE ══════════ --}}
       {{#if is_actions_page}}
       <div class="card">
         <div class="section-eyebrow">Priority Actions</div>
@@ -1684,13 +1397,7 @@
         <div class="section-eyebrow">Data Quality</div>
         <div class="sub-heading">Confidence Table</div>
         <table class="intel-table">
-          <thead>
-            <tr>
-              <th>Domain</th>
-              <th>Confidence</th>
-              <th>Notes</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Domain</th><th>Confidence</th><th>Notes</th></tr></thead>
           <tbody>
             {{#each data_quality}}
             <tr>
@@ -1705,52 +1412,39 @@
       {{/if}}
       {{/if}}
 
-      <!-- ╔═══════════════════════════════════╗
-           ║    SOURCES PAGE                   ║
-           ╚═══════════════════════════════════╝ -->
+      {{!-- ══════════ SOURCES PAGE ══════════ --}}
       {{#if is_sources_page}}
       <div class="card">
-        <div class="section-eyebrow">References</div>
-        <div class="section-title">Cited Sources</div>
-        <div style="margin-top:14px;">
-          {{#each sources}}
-          <div class="source-item">
-            <span class="source-num">{{num}}.</span>
-            <span class="source-text">{{{safe text}}}</span>
-          </div>
-          {{/each}}
+        <div class="section-eyebrow">References & Sources</div>
+        <div class="sub-heading">Cited Intelligence Sources</div>
+        {{#each sources}}
+        <div class="source-item">
+          <span class="source-num">[{{num}}]</span>
+          <span class="source-text">
+            {{{safe text}}}
+            {{#if url}} — <a href="{{url}}">{{url}}</a>{{/if}}
+          </span>
         </div>
+        {{/each}}
       </div>
 
       {{#if deliverable_note}}
-      <div class="assessment-box accent-box">
-        <h4>Deliverable Note</h4>
+      <div class="analyst-callout">
+        <h4>Report Note</h4>
         <p>{{{safe deliverable_note}}}</p>
       </div>
       {{/if}}
-
-      <div style="text-align:center;margin-top:auto;padding-top:28px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:800;letter-spacing:4px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">
-          {{../CLASSIFICATION}}
-        </div>
-        <div style="font-size:11px;color:var(--text-secondary);">
-          Generated by <strong style="color:var(--steel);">{{../ORG_NAME}}</strong> | {{../REPORT_DATE}}
-        </div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">
-          This document is the property of the requesting organization. Unauthorized distribution is prohibited.
-        </div>
-      </div>
       {{/if}}
 
-      <!-- ╔═══════════════════════════════════╗
-           ║    GENERIC CONTENT PAGE           ║
-           ╚═══════════════════════════════════╝ -->
+      {{!-- ══════════ GENERIC CONTENT PAGE ══════════ --}}
       {{#if is_content_page}}
       <div class="card">
         <div class="section-eyebrow">{{section_eyebrow}}</div>
         <div class="section-title">{{section_title}}</div>
         {{#if section_desc}}<div class="section-desc">{{section_desc}}</div>{{/if}}
-        {{{safe content_html}}}
+        <div style="font-size:11px;color:var(--text-secondary);line-height:1.75;">
+          {{{safe content_html}}}
+        </div>
       </div>
 
       {{#if images}}
@@ -1770,7 +1464,7 @@
 
       {{#if analyst_assessment}}
       <div class="analyst-callout">
-        <h4>Analyst Assessment</h4>
+        <h4>Analyst Note</h4>
         <p>{{{safe analyst_assessment}}}</p>
       </div>
       {{/if}}
@@ -1784,9 +1478,7 @@
             {{#each bars}}
             <div class="bar-row">
               <span class="bar-label">{{label}}</span>
-              <div class="bar-track">
-                <div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div>
-              </div>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
               <span class="bar-value">{{value}}</span>
             </div>
             {{/each}}
@@ -1797,7 +1489,7 @@
       {{/if}}
       {{/if}}
 
-      <!-- PAGE NUMBER -->
+      {{!-- ══════════ PAGE NUMBER FOOTER ══════════ --}}
       <div class="page-number">
         <span class="section-ref">{{section_ref}}</span>
         <span>Page {{page_number}} of {{total_pages}}</span>
@@ -1806,6 +1498,6 @@
     </div>
     {{/each}}
   </div>
-</body>
 
+</body>
 </html>

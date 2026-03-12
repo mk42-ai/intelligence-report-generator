@@ -2,20 +2,20 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Intelligence Report Generator API",
-    "version": "1.0.0",
-    "description": "Generate military-grade intelligence assessment PDF reports with satellite imagery, threat matrices, scenario analysis, and priority actions. Supports multi-domain threat assessment, vulnerability analysis, predictive outlook, and data quality confidence tables. Reports include classification banners, On Demand branding, and professional formatting."
+    "version": "2.0.0",
+    "description": "Generate intelligence assessment PDF reports (12+ pages) with satellite imagery, threat matrices, X/Twitter sentiment analysis with tweet evidence, NASA FIRMS fire/thermal detection, explosion detection, scenario analysis, and priority actions. Supports session-based incremental data loading. Reports include classification banners, logo, bar charts, and professional dark military theme formatting."
   },
   "servers": [
     {
-      "url": "https://YOUR_DEPLOYED_URL"
+      "url": "https://serverless.on-demand.io/apps/intelligence-report"
     }
   ],
   "paths": {
     "/intelligence-report/start": {
       "post": {
         "operationId": "startSession",
-        "summary": "Start a new intelligence report session",
-        "description": "Initialize a new session to begin building an intelligence report. Returns a sessionId to use in subsequent calls.",
+        "summary": "Start or reset an intelligence report session",
+        "description": "Initialize a new session to begin building an intelligence report. If session already exists, it will be reset (previous data cleared). Returns the sessionId to use in subsequent /update and /generate calls.",
         "requestBody": {
           "required": true,
           "content": {
@@ -26,7 +26,7 @@
                 "properties": {
                   "sessionId": {
                     "type": "string",
-                    "description": "A unique session identifier for this report (e.g., 'uae-iran-2026-03-07')"
+                    "description": "A unique session identifier for this report (e.g., 'uae-iran-2026-03-12'). If session exists, it will be reset."
                   }
                 }
               }
@@ -35,7 +35,7 @@
         },
         "responses": {
           "200": {
-            "description": "Session started successfully",
+            "description": "Session started or reset successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -51,11 +51,51 @@
         }
       }
     },
+    "/intelligence-report/delete": {
+      "post": {
+        "operationId": "deleteSession",
+        "summary": "Delete an existing session",
+        "description": "Delete a session and all its data. Useful for cleanup before starting fresh.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId"],
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "description": "The session ID to delete"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "description": "Result message" },
+                    "sessionId": { "type": "string", "description": "The session ID" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/intelligence-report/update": {
       "post": {
         "operationId": "updateReportData",
-        "summary": "Add or update intelligence report data",
-        "description": "Send report content data to the session. Can be called multiple times to incrementally build the report. Data is merged with existing session data.",
+        "summary": "Add or update intelligence report data incrementally",
+        "description": "Send report content data to the session. Call multiple times to incrementally build the report as data is collected from different agents. Arrays are appended (not replaced), objects are deep merged. Send data as you collect it — do NOT wait until the end to dump everything.",
         "requestBody": {
           "required": true,
           "content": {
@@ -70,62 +110,70 @@
                   },
                   "report_title": {
                     "type": "string",
-                    "description": "Main title of the intelligence report (e.g., 'UAE-Iran Crisis — Predictive Threat Assessment')"
+                    "description": "Main title (e.g., 'UAE-IRAN CRISIS — PREDICTIVE THREAT ASSESSMENT')"
                   },
                   "report_subtitle": {
                     "type": "string",
-                    "description": "Subtitle with scope descriptors (e.g., 'Launch Sites • Maritime Routes • Airspace • Strike Vectors')"
+                    "description": "Subtitle with scope (e.g., 'Satellite • Fire Detection • Maritime • Airspace • X Sentiment')"
                   },
                   "report_date": {
                     "type": "string",
-                    "description": "Report date (e.g., 'March 7, 2026')"
+                    "description": "Report date (e.g., 'March 12, 2026')"
                   },
                   "report_id": {
                     "type": "string",
-                    "description": "Report identifier (e.g., 'IR-2026-0307-UAE')"
+                    "description": "Report identifier (e.g., 'IR-2026-0312-UAE')"
                   },
                   "classification": {
                     "type": "string",
-                    "description": "Classification level shown on banners. Options: 'TOP SECRET', 'SECRET', 'CONFIDENTIAL', 'FOR OFFICIAL USE ONLY', 'UNCLASSIFIED', or custom text like 'SENSITIVE — FOR OFFICIAL USE ONLY'"
+                    "description": "Classification level: 'TOP SECRET', 'SECRET', 'CONFIDENTIAL', 'FOR OFFICIAL USE ONLY', 'SENSITIVE — FOR OFFICIAL USE ONLY', 'UNCLASSIFIED'"
                   },
                   "update_cadence": {
                     "type": "string",
-                    "description": "How often the report is updated (e.g., '24h Rolling', 'Weekly')"
+                    "description": "Update frequency (e.g., '48h Rolling')"
+                  },
+                  "logo_url": {
+                    "type": "string",
+                    "description": "HTTPS URL to organization logo image (PNG/SVG/JPG)"
+                  },
+                  "logo_base64": {
+                    "type": "string",
+                    "description": "Base64 data URL for logo (e.g., 'data:image/png;base64,...')"
                   },
                   "executive_summary": {
                     "type": "string",
-                    "description": "HTML-enabled executive summary text. Use <strong> for emphasis."
+                    "description": "HTML-enabled executive summary. Use <strong> for emphasis."
                   },
                   "key_stats": {
                     "type": "array",
-                    "description": "Key statistics shown as cards on the cover page",
+                    "description": "Key stat cards on cover page (4 recommended)",
                     "items": {
                       "type": "object",
                       "properties": {
-                        "value": { "type": "string", "description": "The stat value (e.g., 'CRITICAL', '48%', '5')" },
-                        "label": { "type": "string", "description": "Label below the value (e.g., 'Overall Threat Level')" },
-                        "type": { "type": "string", "description": "Color type: 'critical' (red), 'high' (orange), 'moderate' (yellow), 'low' (green), 'accent' (blue)" }
+                        "value": { "type": "string", "description": "Stat value (e.g., 'CRITICAL', '55%')" },
+                        "label": { "type": "string", "description": "Stat label (e.g., 'Overall Threat Level')" },
+                        "type": { "type": "string", "description": "Color: 'critical'|'high'|'moderate'|'low'|'accent'" }
                       }
                     }
                   },
                   "cover_image": {
                     "type": "object",
-                    "description": "Hero image for the cover page",
+                    "description": "Cover page hero image",
                     "properties": {
-                      "url": { "type": "string", "description": "Direct URL to the image" },
-                      "caption": { "type": "string", "description": "Image caption" },
-                      "source": { "type": "string", "description": "Image source attribution" }
+                      "url": { "type": "string", "description": "Image URL" },
+                      "caption": { "type": "string", "description": "Caption" },
+                      "source": { "type": "string", "description": "Source attribution" }
                     }
                   },
                   "threat_matrix": {
                     "type": "array",
-                    "description": "Threat matrix rows for the threat assessment page",
+                    "description": "Threat matrix rows (6+ recommended)",
                     "items": {
                       "type": "object",
                       "properties": {
-                        "domain": { "type": "string", "description": "Threat domain (e.g., 'Ballistic / Cruise Missiles')" },
-                        "threat_level": { "type": "string", "description": "Threat level: 'CRITICAL', 'HIGH', 'MODERATE', 'LOW'" },
-                        "vector": { "type": "string", "description": "Attack vector description" },
+                        "domain": { "type": "string", "description": "Threat domain" },
+                        "threat_level": { "type": "string", "description": "'CRITICAL'|'HIGH'|'MODERATE'|'LOW'" },
+                        "vector": { "type": "string", "description": "Attack vector" },
                         "status": { "type": "string", "description": "Current status" },
                         "concerns": { "type": "string", "description": "Key concerns" }
                       }
@@ -133,133 +181,323 @@
                   },
                   "key_indicators": {
                     "type": "array",
-                    "description": "Key indicators to watch",
+                    "description": "Key indicators watch list",
                     "items": {
                       "type": "object",
                       "properties": {
-                        "text": { "type": "string", "description": "Indicator text (HTML enabled, use <strong> for emphasis)" },
-                        "level": { "type": "string", "description": "Indicator severity: 'critical', 'high', or empty" }
+                        "text": { "type": "string", "description": "Indicator text (HTML enabled)" },
+                        "level": { "type": "string", "description": "'critical'|'high'|empty" }
                       }
                     }
                   },
                   "analysis_sections": {
                     "type": "array",
-                    "description": "Array of analysis section pages. Each becomes a separate page in the report.",
+                    "description": "Analysis section pages. Each becomes a separate page. Send 3-5 sections for a comprehensive report (e.g., Strike Vectors, Maritime, Airspace/Economic).",
                     "items": {
                       "type": "object",
                       "properties": {
-                        "eyebrow": { "type": "string", "description": "Section category label (e.g., 'Strike Vectors', 'Maritime Analysis')" },
+                        "eyebrow": { "type": "string", "description": "Section category (e.g., 'Strike Vectors')" },
                         "title": { "type": "string", "description": "Section title" },
-                        "description": { "type": "string", "description": "Section description text" },
-                        "section_ref": { "type": "string", "description": "Short reference shown in page footer" },
-                        "assessment_confidence": { "type": "string", "description": "Confidence level: 'High', 'Moderate', 'Low'" },
+                        "description": { "type": "string", "description": "Section description" },
+                        "section_ref": { "type": "string", "description": "Footer reference" },
+                        "assessment_confidence": { "type": "string", "description": "'High'|'Moderate'|'Low'" },
                         "table": {
                           "type": "object",
-                          "description": "Data table for this section",
                           "properties": {
                             "headers": { "type": "array", "items": { "type": "string" }, "description": "Column headers" },
-                            "rows": {
-                              "type": "array",
-                              "description": "Table rows",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "cells": { "type": "array", "items": { "type": "string" }, "description": "Cell values (HTML enabled)" }
-                                }
-                              }
-                            }
+                            "rows": { "type": "array", "items": { "type": "object", "properties": { "cells": { "type": "array", "items": { "type": "string" } } } } }
                           }
                         },
-                        "text": { "type": "string", "description": "Free-form analysis text (HTML enabled)" },
+                        "text": { "type": "string", "description": "Analysis text (HTML enabled)" },
                         "images": {
                           "type": "array",
-                          "description": "Satellite/evidence images for this section",
                           "items": {
                             "type": "object",
                             "properties": {
-                              "url": { "type": "string", "description": "Direct image URL" },
-                              "caption": { "type": "string", "description": "Image caption/title" },
-                              "meta": { "type": "string", "description": "Additional metadata text" },
-                              "type": { "type": "string", "description": "Image type badge (e.g., 'Satellite', 'Overhead', 'AIS Data', 'Sentinel')" }
+                              "url": { "type": "string", "description": "Image URL" },
+                              "caption": { "type": "string", "description": "Caption" },
+                              "meta": { "type": "string", "description": "Metadata" },
+                              "type": { "type": "string", "description": "Type badge (e.g., 'Satellite', 'Street View')" }
                             }
                           }
                         },
                         "vulnerability_cards": {
                           "type": "array",
-                          "description": "Vulnerability assessment cards with optional images",
                           "items": {
                             "type": "object",
                             "properties": {
-                              "title": { "type": "string", "description": "Target/location name" },
-                              "threat_level": { "type": "string", "description": "Threat level: 'CRITICAL', 'HIGH', 'MODERATE', 'LOW'" },
-                              "image_url": { "type": "string", "description": "Satellite/evidence image URL" },
-                              "details": { "type": "string", "description": "Vulnerability details (HTML enabled)" }
+                              "title": { "type": "string", "description": "Target name" },
+                              "threat_level": { "type": "string", "description": "'CRITICAL'|'HIGH'|'MODERATE'|'LOW'" },
+                              "image_url": { "type": "string", "description": "Image URL" },
+                              "details": { "type": "string", "description": "Details (HTML enabled)" }
                             }
                           }
                         },
-                        "analyst_assessment": { "type": "string", "description": "Analyst assessment callout text (HTML enabled)" }
+                        "analyst_assessment": { "type": "string", "description": "Analyst assessment (HTML enabled)" },
+                        "charts": {
+                          "type": "array",
+                          "description": "Bar charts for this section",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "title": { "type": "string", "description": "Chart title" },
+                              "bars": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": { "type": "string", "description": "Bar label" },
+                                    "value": { "type": "string", "description": "Display value" },
+                                    "percent": { "type": "number", "description": "Bar fill percentage (0-100)" },
+                                    "color": { "type": "string", "description": "'critical'|'high'|'moderate'|'low'|'accent'" }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
                       }
+                    }
+                  },
+                  "x_sentiment": {
+                    "type": "object",
+                    "description": "X (Twitter) sentiment analysis page with tweet evidence rows",
+                    "properties": {
+                      "title": { "type": "string", "description": "Page title (e.g., 'X (Twitter) Sentiment Analysis')" },
+                      "description": { "type": "string", "description": "Page description" },
+                      "overall_sentiment": { "type": "string", "description": "'Positive'|'Negative'|'Neutral'" },
+                      "overall_score": { "type": "string", "description": "Composite score (e.g., '-0.72')" },
+                      "total_posts": { "type": "string", "description": "Total posts analyzed" },
+                      "time_period": { "type": "string", "description": "Analysis window (e.g., '72h')" },
+                      "keyword_sentiment": {
+                        "type": "array",
+                        "description": "Sentiment breakdown by keyword/hashtag with stacked bar charts",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "keyword": { "type": "string", "description": "Keyword or hashtag" },
+                            "positive": { "type": "number", "description": "Positive percentage" },
+                            "neutral": { "type": "number", "description": "Neutral percentage" },
+                            "negative": { "type": "number", "description": "Negative percentage" },
+                            "volume": { "type": "string", "description": "Number of posts" }
+                          }
+                        }
+                      },
+                      "evidence_tweets": {
+                        "type": "array",
+                        "description": "Actual tweet evidence rows with full post details. Include 6-10 representative tweets.",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "username": { "type": "string", "description": "Display name" },
+                            "handle": { "type": "string", "description": "@ handle (e.g., '@user123')" },
+                            "timestamp": { "type": "string", "description": "Post timestamp" },
+                            "text": { "type": "string", "description": "Full post text (HTML enabled)" },
+                            "sentiment": { "type": "string", "description": "'Positive'|'Negative'|'Neutral'" },
+                            "retweets": { "type": "string", "description": "Retweet count" },
+                            "likes": { "type": "string", "description": "Like count" },
+                            "verified": { "type": "boolean", "description": "Is user verified" }
+                          }
+                        }
+                      },
+                      "trending_hashtags": {
+                        "type": "array",
+                        "description": "Trending hashtags with volume and sentiment",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "hashtag": { "type": "string", "description": "Hashtag (e.g., '#HormuzCrisis')" },
+                            "volume": { "type": "string", "description": "Post count" },
+                            "sentiment": { "type": "string", "description": "'Positive'|'Negative'|'Neutral'" },
+                            "change": { "type": "string", "description": "Trend direction (e.g., '+45%')" }
+                          }
+                        }
+                      },
+                      "analyst_assessment": { "type": "string", "description": "Social sentiment analyst assessment (HTML enabled)" },
+                      "charts": {
+                        "type": "array",
+                        "description": "Bar charts for X sentiment",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "title": { "type": "string" },
+                            "bars": { "type": "array", "items": { "type": "object", "properties": { "label": { "type": "string" }, "value": { "type": "string" }, "percent": { "type": "number" }, "color": { "type": "string" } } } }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "sentiment_analysis": {
+                    "type": "object",
+                    "description": "Multi-source sentiment analysis page (media, diplomatic, financial)",
+                    "properties": {
+                      "title": { "type": "string", "description": "Page title" },
+                      "description": { "type": "string", "description": "Description" },
+                      "overall_sentiment": { "type": "string", "description": "'Positive'|'Negative'|'Neutral'" },
+                      "overall_score": { "type": "string", "description": "Score (e.g., '-0.72')" },
+                      "sources_analyzed": { "type": "string", "description": "Count of sources" },
+                      "time_period": { "type": "string", "description": "Time window" },
+                      "categories": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": { "type": "string" },
+                            "positive": { "type": "number" },
+                            "neutral": { "type": "number" },
+                            "negative": { "type": "number" },
+                            "key_narrative": { "type": "string" }
+                          }
+                        }
+                      },
+                      "trending_topics": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "topic": { "type": "string" },
+                            "sentiment": { "type": "string" },
+                            "volume": { "type": "string" }
+                          }
+                        }
+                      },
+                      "analyst_assessment": { "type": "string" }
+                    }
+                  },
+                  "fire_detection": {
+                    "type": "object",
+                    "description": "NASA FIRMS thermal anomaly / fire detection page. Populate from FIRMS CSV data.",
+                    "properties": {
+                      "title": { "type": "string", "description": "Page title" },
+                      "description": { "type": "string" },
+                      "summary": {
+                        "type": "object",
+                        "properties": {
+                          "total_detections": { "type": "string", "description": "Total VIIRS detections" },
+                          "significant": { "type": "string", "description": "Detections with FRP > 20MW" },
+                          "military_grade": { "type": "string", "description": "Detections with bright_ti4 > 400K AND FRP > 50MW" },
+                          "timespan": { "type": "string", "description": "Time span (e.g., '5 Days')" }
+                        }
+                      },
+                      "area_summary": {
+                        "type": "array",
+                        "description": "Summary by geographic area",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "area": { "type": "string", "description": "Area name" },
+                            "count": { "type": "string", "description": "Detection count" },
+                            "max_frp": { "type": "string", "description": "Maximum FRP in MW" },
+                            "assessment": { "type": "string", "description": "Area assessment" }
+                          }
+                        }
+                      },
+                      "detections": {
+                        "type": "array",
+                        "description": "Individual thermal detections from FIRMS CSV. Include significant ones (FRP > 10MW).",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "lat": { "type": "string" },
+                            "lon": { "type": "string" },
+                            "location_name": { "type": "string", "description": "Cross-referenced location name" },
+                            "bright_ti4": { "type": "string", "description": "Brightness temp in Kelvin" },
+                            "frp": { "type": "string", "description": "Fire radiative power in MW" },
+                            "confidence": { "type": "string" },
+                            "acq_date": { "type": "string" },
+                            "acq_time": { "type": "string" },
+                            "classification": { "type": "string", "description": "'Military Grade' (>400K/>50MW), 'Significant' (>350K/>20MW), or 'Standard'" }
+                          }
+                        }
+                      },
+                      "analyst_assessment": { "type": "string" },
+                      "charts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "title": { "type": "string" },
+                            "bars": { "type": "array", "items": { "type": "object", "properties": { "label": { "type": "string" }, "value": { "type": "string" }, "percent": { "type": "number" }, "color": { "type": "string" } } } }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "explosion_detection": {
+                    "type": "object",
+                    "description": "Explosion/blast event detection page",
+                    "properties": {
+                      "title": { "type": "string" },
+                      "description": { "type": "string" },
+                      "summary": {
+                        "type": "object",
+                        "properties": {
+                          "total_events": { "type": "string" },
+                          "confirmed": { "type": "string" },
+                          "unconfirmed": { "type": "string" },
+                          "timespan": { "type": "string" }
+                        }
+                      },
+                      "events": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "event_id": { "type": "string" },
+                            "timestamp": { "type": "string" },
+                            "location": { "type": "string" },
+                            "magnitude": { "type": "string" },
+                            "confidence": { "type": "string" },
+                            "blast_radius": { "type": "string" },
+                            "source": { "type": "string" },
+                            "status": { "type": "string", "description": "'Confirmed'|'Unconfirmed'" },
+                            "details": { "type": "string" },
+                            "images": { "type": "array", "items": { "type": "object", "properties": { "url": { "type": "string" }, "caption": { "type": "string" } } } }
+                          }
+                        }
+                      },
+                      "analyst_assessment": { "type": "string" }
                     }
                   },
                   "scenarios": {
                     "type": "array",
-                    "description": "Scenario matrix for predictive outlook page",
+                    "description": "Scenario matrix (7/30/90 day horizons)",
                     "items": {
                       "type": "object",
                       "properties": {
-                        "horizon": { "type": "string", "description": "Time horizon (e.g., '7 Days', '30 Days', '90 Days')" },
-                        "most_likely": { "type": "string", "description": "Most likely scenario description" },
-                        "escalation_risk": { "type": "string", "description": "Escalation risk percentage (e.g., '48%')" },
-                        "triggers": { "type": "string", "description": "Decision triggers" }
+                        "horizon": { "type": "string" },
+                        "most_likely": { "type": "string" },
+                        "escalation_risk": { "type": "string" },
+                        "triggers": { "type": "string" }
                       }
                     }
                   },
-                  "escalation_indicators": {
-                    "type": "array",
-                    "items": { "type": "string" },
-                    "description": "List of escalation warning indicators"
-                  },
-                  "deescalation_indicators": {
-                    "type": "array",
-                    "items": { "type": "string" },
-                    "description": "List of de-escalation indicators"
-                  },
+                  "escalation_indicators": { "type": "array", "items": { "type": "string" }, "description": "Escalation warning indicators" },
+                  "deescalation_indicators": { "type": "array", "items": { "type": "string" }, "description": "De-escalation indicators" },
                   "priority_actions": {
                     "type": "array",
-                    "description": "Priority action items",
                     "items": {
                       "type": "object",
                       "properties": {
-                        "title": { "type": "string", "description": "Action title" },
-                        "description": { "type": "string", "description": "Action description (HTML enabled)" }
+                        "title": { "type": "string" },
+                        "description": { "type": "string" }
                       }
                     }
                   },
-                  "highest_yield_action": {
-                    "type": "string",
-                    "description": "Highlighted highest-yield defensive action (HTML enabled)"
-                  },
+                  "highest_yield_action": { "type": "string" },
                   "data_quality": {
                     "type": "array",
-                    "description": "Data quality/confidence table entries",
                     "items": {
                       "type": "object",
                       "properties": {
-                        "domain": { "type": "string", "description": "Data domain (e.g., 'Satellite / IMINT')" },
-                        "confidence": { "type": "string", "description": "Confidence level: 'HIGH', 'MODERATE', 'LOW'" },
-                        "notes": { "type": "string", "description": "Notes about data quality" }
+                        "domain": { "type": "string" },
+                        "confidence": { "type": "string", "description": "'HIGH'|'MODERATE'|'LOW'" },
+                        "notes": { "type": "string" }
                       }
                     }
                   },
-                  "sources": {
-                    "type": "array",
-                    "items": { "type": "string" },
-                    "description": "Cited sources/references list"
-                  },
-                  "deliverable_note": {
-                    "type": "string",
-                    "description": "Deliverable disclaimer note (HTML enabled)"
-                  }
+                  "sources": { "type": "array", "items": { "type": "string" }, "description": "Cited sources" },
+                  "deliverable_note": { "type": "string" }
                 }
               }
             }
@@ -273,7 +511,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "description": "Success message" }
+                    "message": { "type": "string" },
+                    "updatedKeys": { "type": "array", "items": { "type": "string" }, "description": "Keys that were updated" },
+                    "totalKeys": { "type": "number", "description": "Total data keys in session" }
                   }
                 }
               }
@@ -286,7 +526,7 @@
       "post": {
         "operationId": "generateReport",
         "summary": "Generate the intelligence report PDF",
-        "description": "Compile all session data into a professionally formatted PDF intelligence report and return a download URL. The session is cleaned up after generation.",
+        "description": "Compile all session data into a professionally formatted PDF intelligence report (12+ pages) and return a download URL. Session is cleaned up after generation.",
         "requestBody": {
           "required": true,
           "content": {
@@ -295,10 +535,7 @@
                 "type": "object",
                 "required": ["sessionId"],
                 "properties": {
-                  "sessionId": {
-                    "type": "string",
-                    "description": "The session ID to generate the report for"
-                  }
+                  "sessionId": { "type": "string", "description": "Session ID to generate report for" }
                 }
               }
             }
@@ -306,14 +543,15 @@
         },
         "responses": {
           "200": {
-            "description": "Report generated successfully",
+            "description": "Report generated",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "description": "Success message" },
-                    "url": { "type": "string", "description": "URL to download the generated PDF report" }
+                    "message": { "type": "string" },
+                    "url": { "type": "string", "description": "PDF download URL" },
+                    "pages": { "type": "number", "description": "Number of pages generated" }
                   }
                 }
               }

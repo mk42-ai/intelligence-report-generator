@@ -14,10 +14,9 @@ app.use(bodyParser.json({ limit: "50mb" }));
 // ---------------------------------------------------------
 // PDF STORE & HELPERS
 // ---------------------------------------------------------
-const pdfStore = new Map(); // id -> { buffer, createdAt }
-const PDF_TTL = 60 * 60 * 1000; // 1 hour
+const pdfStore = new Map();
+const PDF_TTL = 60 * 60 * 1000;
 
-// Cleanup expired PDFs every 10 minutes
 setInterval(() => {
     const now = Date.now();
     for (const [id, entry] of pdfStore) {
@@ -34,7 +33,6 @@ function getRandomString(length = 10) {
     return result;
 }
 
-// Serve PDFs directly from memory
 app.get('/intelligence-report/download/:id', (req, res) => {
     const entry = pdfStore.get(req.params.id);
     if (!entry) return res.status(404).json({ error: "PDF not found or expired" });
@@ -49,6 +47,10 @@ app.get('/intelligence-report/download/:id', (req, res) => {
 const TEMPLATE_PATH = path.join(__dirname, 'Intelligence Report/template.html');
 
 Handlebars.registerHelper('safe', text => new Handlebars.SafeString(text));
+Handlebars.registerHelper('eq', (a, b) => a === b);
+Handlebars.registerHelper('gt', (a, b) => Number(a) > Number(b));
+Handlebars.registerHelper('add', (a, b) => Number(a) + Number(b));
+Handlebars.registerHelper('json', obj => JSON.stringify(obj));
 
 async function getImageDataUrl(filePath) {
     try {
@@ -62,7 +64,6 @@ async function getImageDataUrl(filePath) {
     }
 }
 
-// Threat level badge HTML
 function getThreatBadgeHtml(level) {
     const l = (level || "moderate").toLowerCase();
     let cls = "moderate";
@@ -72,17 +73,14 @@ function getThreatBadgeHtml(level) {
     return `<span class="threat-badge ${cls}">${level}</span>`;
 }
 
-// Confidence badge HTML
 function getConfidenceBadgeHtml(confidence) {
     const c = (confidence || "moderate").toLowerCase();
     let cls = "moderate-conf";
     if (c.includes("high")) cls = "high-conf";
     else if (c.includes("low")) cls = "low-conf";
-    const label = confidence || "Moderate";
-    return `<span class="conf-badge ${cls}">${label}</span>`;
+    return `<span class="conf-badge ${cls}">${confidence || "Moderate"}</span>`;
 }
 
-// Escalation badge HTML
 function getEscalationHtml(value) {
     if (!value) return "";
     const v = String(value);
@@ -94,17 +92,15 @@ function getEscalationHtml(value) {
     return `<span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${color};">${v}</span>`;
 }
 
-// Classification class mapping
 function getClassificationClass(classification) {
     const c = (classification || "").toLowerCase().replace(/[^a-z]/g, '');
     if (c.includes("topsecret")) return "top-secret";
     if (c.includes("secret")) return "secret";
     if (c.includes("confidential")) return "confidential";
-    if (c.includes("fouo") || c.includes("official")) return "fouo";
+    if (c.includes("fouo") || c.includes("official") || c.includes("sensitive")) return "fouo";
     return "unclassified";
 }
 
-// Stat card class
 function getStatClass(type) {
     const t = (type || "").toLowerCase();
     if (t.includes("critical")) return "critical-stat";
@@ -114,7 +110,6 @@ function getStatClass(type) {
     return "accent-stat";
 }
 
-// Sentiment class
 function getSentimentClass(sentiment) {
     const s = (sentiment || "").toLowerCase();
     if (s.includes("positive") || s.includes("pos")) return "pos";
@@ -122,7 +117,6 @@ function getSentimentClass(sentiment) {
     return "neu";
 }
 
-// Sentiment overall class
 function getSentimentOverallClass(sentiment) {
     const s = (sentiment || "").toLowerCase();
     if (s.includes("positive")) return "positive";
@@ -130,14 +124,12 @@ function getSentimentOverallClass(sentiment) {
     return "neutral";
 }
 
-// Explosion status class
 function getExplosionStatusClass(status) {
     const s = (status || "").toLowerCase();
     if (s.includes("confirmed") && !s.includes("un")) return "confirmed";
     return "unconfirmed";
 }
 
-// Bar chart color class
 function getBarColorClass(color) {
     const c = (color || "accent").toLowerCase();
     if (c.includes("critical") || c.includes("red")) return "critical";
@@ -148,19 +140,21 @@ function getBarColorClass(color) {
     return "accent";
 }
 
-// Process bar chart data
 function processCharts(charts) {
     if (!Array.isArray(charts) || charts.length === 0) return undefined;
     return charts.map(chart => {
-        const maxVal = Math.max(...(chart.bars || []).map(b => Number(b.value) || 0), 1);
+        const bars = (chart.bars || []);
+        // For percentage-based values, use percent directly. Otherwise calculate from value.
+        const hasPercent = bars.some(b => b.percent != null);
+        const maxVal = hasPercent ? 100 : Math.max(...bars.map(b => parseFloat(String(b.value).replace(/[^0-9.]/g, '')) || 0), 1);
         return {
             title: String(chart.title || ""),
-            bars: (chart.bars || []).map(bar => {
-                const val = Number(bar.value) || 0;
+            bars: bars.map(bar => {
+                const pct = bar.percent != null ? Number(bar.percent) : Math.round((parseFloat(String(bar.value).replace(/[^0-9.]/g, '')) || 0) / maxVal * 100);
                 return {
                     label: String(bar.label || ""),
                     value: String(bar.value || "0"),
-                    percent: Math.round((val / maxVal) * 100),
+                    percent: Math.min(pct, 100),
                     color: getBarColorClass(bar.color)
                 };
             })
@@ -180,7 +174,7 @@ async function renderDynamicPdf(html) {
     try {
         const page = await browser.newPage();
         await page.setViewport({ width: 960, height: 1200 });
-        await page.setContent(html, { waitUntil: "networkidle0" });
+        await page.setContent(html, { waitUntil: "networkidle0", timeout: 60000 });
 
         const mergedPdf = await PDFDocument.create();
 
@@ -194,7 +188,6 @@ async function renderDynamicPdf(html) {
                 const container = document.querySelector('.page-container');
 
                 wrappers.forEach(w => w.style.display = 'none');
-
                 const current = wrappers[index];
                 current.style.display = 'flex';
 
@@ -237,20 +230,35 @@ async function renderDynamicPdf(html) {
 // ---------------------------------------------------------
 const sessionStore = new Map();
 
+// Auto-cleanup sessions older than 2 hours
+setInterval(() => {
+    const now = Date.now();
+    for (const [id, session] of sessionStore) {
+        if (now - session.timestamp > 2 * 60 * 60 * 1000) {
+            sessionStore.delete(id);
+            console.log(`Session expired and removed: ${id}`);
+        }
+    }
+}, 10 * 60 * 1000);
+
 // ---------------------------------------------------------
 // API ENDPOINTS
 // ---------------------------------------------------------
 
 /**
- * START SESSION
+ * START SESSION — creates or resets a session
  */
 app.post('/intelligence-report/start', (req, res) => {
     let { sessionId } = req.body;
     if (!sessionId) return res.status(400).json({ error: "sessionId required" });
 
-    sessionId = sessionId.toLowerCase();
+    sessionId = sessionId.toLowerCase().trim();
+
+    // If session already exists, reset it instead of erroring
     if (sessionStore.has(sessionId)) {
-        return res.status(400).json({ error: "Session exists" });
+        sessionStore.set(sessionId, { timestamp: Date.now(), data: {} });
+        console.log(`Session reset: ${sessionId}`);
+        return res.json({ message: "Session reset (previous data cleared)", sessionId });
     }
 
     sessionStore.set(sessionId, { timestamp: Date.now(), data: {} });
@@ -259,20 +267,76 @@ app.post('/intelligence-report/start', (req, res) => {
 });
 
 /**
- * UPDATE DATA
+ * DELETE SESSION
+ */
+app.post('/intelligence-report/delete', (req, res) => {
+    let { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ error: "sessionId required" });
+
+    sessionId = sessionId.toLowerCase().trim();
+    if (sessionStore.has(sessionId)) {
+        sessionStore.delete(sessionId);
+        console.log(`Session deleted: ${sessionId}`);
+        return res.json({ message: "Session deleted", sessionId });
+    }
+    res.json({ message: "Session not found (already clean)", sessionId });
+});
+
+/**
+ * LIST SESSIONS — debug helper
+ */
+app.get('/intelligence-report/sessions', (req, res) => {
+    const sessions = [];
+    for (const [id, session] of sessionStore) {
+        sessions.push({
+            sessionId: id,
+            created: new Date(session.timestamp).toISOString(),
+            dataKeys: Object.keys(session.data || {})
+        });
+    }
+    res.json({ sessions });
+});
+
+/**
+ * UPDATE DATA — deep merges data into session
  */
 app.post('/intelligence-report/update', (req, res) => {
     const body = req.body;
     if (!body.sessionId) return res.status(400).json({ error: "sessionId required" });
 
-    const sessionId = body.sessionId.toLowerCase();
-    if (!sessionStore.has(sessionId)) return res.status(404).json({ error: "Session not found" });
+    const sessionId = body.sessionId.toLowerCase().trim();
+    if (!sessionStore.has(sessionId)) return res.status(404).json({ error: "Session not found. Call /start first." });
 
     const session = sessionStore.get(sessionId);
     session.timestamp = Date.now();
-    session.data = { ...session.data, ...body };
 
-    res.json({ message: "Data updated" });
+    // Deep merge: arrays get replaced, objects get merged
+    const data = session.data;
+    for (const [key, value] of Object.entries(body)) {
+        if (key === 'sessionId') continue;
+
+        if (Array.isArray(value)) {
+            // Arrays: append if same key exists and is array, otherwise replace
+            if (Array.isArray(data[key])) {
+                data[key] = [...data[key], ...value];
+            } else {
+                data[key] = value;
+            }
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+            // Objects: deep merge
+            if (data[key] && typeof data[key] === 'object' && !Array.isArray(data[key])) {
+                data[key] = { ...data[key], ...value };
+            } else {
+                data[key] = value;
+            }
+        } else {
+            data[key] = value;
+        }
+    }
+
+    const updatedKeys = Object.keys(body).filter(k => k !== 'sessionId');
+    console.log(`Session updated: ${sessionId} — keys: ${updatedKeys.join(', ')}`);
+    res.json({ message: "Data updated", updatedKeys, totalKeys: Object.keys(data).length });
 });
 
 /**
@@ -282,7 +346,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
     let { sessionId } = req.body;
     if (!sessionId) return res.status(400).json({ error: "sessionId required" });
 
-    sessionId = sessionId.toLowerCase();
+    sessionId = sessionId.toLowerCase().trim();
     if (!sessionStore.has(sessionId)) return res.status(404).json({ error: "Session not found" });
 
     try {
@@ -307,7 +371,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
         const compiledTemplate = Handlebars.compile(fs.readFileSync(TEMPLATE_PATH, 'utf8'));
         let allPages = [];
 
-        // ── COVER PAGE ──
+        // ── PAGE 1: COVER PAGE ──
         const coverStats = Array.isArray(input.key_stats) ? input.key_stats.map(s => ({
             value: String(s.value || "\u2014"),
             label: String(s.label || ""),
@@ -332,7 +396,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
 
         allPages.push(coverPage);
 
-        // ── THREAT MATRIX PAGE ──
+        // ── PAGE 2: THREAT MATRIX ──
         if (Array.isArray(input.threat_matrix) && input.threat_matrix.length > 0) {
             const threatRows = input.threat_matrix.map(t => ({
                 domain: String(t.domain || ""),
@@ -351,8 +415,8 @@ app.post('/intelligence-report/generate', async (req, res) => {
             allPages.push({
                 is_threat_matrix_page: true,
                 section_ref: "Threat Assessment",
-                section_title: String(input.threat_matrix_title || "Threat Matrix"),
-                section_desc: String(input.threat_matrix_desc || "Multi-domain threat assessment with current status and key concerns."),
+                section_title: String(input.threat_matrix_title || "Multi-Domain Threat Matrix"),
+                section_desc: String(input.threat_matrix_desc || "Comprehensive threat assessment across all operational domains with current status and key concerns."),
                 threat_rows: threatRows,
                 key_indicators: keyIndicators.length > 0 ? keyIndicators : undefined,
                 indicator_horizon: String(input.indicator_horizon || "72h"),
@@ -360,7 +424,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
             });
         }
 
-        // ── ANALYSIS SECTIONS ──
+        // ── PAGES 3-N: ANALYSIS SECTIONS (each gets its own page) ──
         const analysisSections = Array.isArray(input.analysis_sections) ? input.analysis_sections : [];
         analysisSections.forEach(section => {
             const page = {
@@ -415,15 +479,76 @@ app.post('/intelligence-report/generate', async (req, res) => {
             allPages.push(page);
         });
 
-        // ── SENTIMENT ANALYSIS PAGE ──
+        // ── X / TWITTER SENTIMENT PAGE ──
+        if (input.x_sentiment) {
+            const xs = input.x_sentiment;
+
+            const xPage = {
+                is_x_sentiment_page: true,
+                section_ref: "X/Social Sentiment",
+                section_title: String(xs.title || "X (Twitter) Sentiment Analysis"),
+                section_desc: String(xs.description || "Real-time sentiment analysis from X/Twitter posts related to the crisis."),
+                overall_sentiment: String(xs.overall_sentiment || "Neutral"),
+                overall_sentiment_class: getSentimentOverallClass(xs.overall_sentiment),
+                overall_score: String(xs.overall_score || "0.00"),
+                total_posts: String(xs.total_posts || "0"),
+                time_period: String(xs.time_period || "24h"),
+                charts: processCharts(xs.charts),
+            };
+
+            // Sentiment breakdown by keyword/hashtag
+            if (Array.isArray(xs.keyword_sentiment) && xs.keyword_sentiment.length > 0) {
+                xPage.keyword_sentiment = xs.keyword_sentiment.map(kw => ({
+                    keyword: String(kw.keyword || ""),
+                    positive: Number(kw.positive) || 0,
+                    neutral: Number(kw.neutral) || 0,
+                    negative: Number(kw.negative) || 0,
+                    volume: String(kw.volume || "0"),
+                }));
+            }
+
+            // Evidence rows — actual tweets
+            if (Array.isArray(xs.evidence_tweets) && xs.evidence_tweets.length > 0) {
+                xPage.evidence_tweets = xs.evidence_tweets.map(tw => ({
+                    username: String(tw.username || "@unknown"),
+                    handle: String(tw.handle || ""),
+                    timestamp: String(tw.timestamp || ""),
+                    text: String(tw.text || ""),
+                    sentiment: String(tw.sentiment || "Neutral"),
+                    sentiment_class: getSentimentClass(tw.sentiment),
+                    retweets: String(tw.retweets || "0"),
+                    likes: String(tw.likes || "0"),
+                    verified: tw.verified === true,
+                }));
+            }
+
+            // Trending hashtags
+            if (Array.isArray(xs.trending_hashtags) && xs.trending_hashtags.length > 0) {
+                xPage.trending_hashtags = xs.trending_hashtags.map(ht => ({
+                    hashtag: String(ht.hashtag || ""),
+                    volume: String(ht.volume || "0"),
+                    sentiment: String(ht.sentiment || "Neutral"),
+                    sentiment_class: getSentimentClass(ht.sentiment),
+                    change: String(ht.change || ""),
+                }));
+            }
+
+            if (xs.analyst_assessment) {
+                xPage.analyst_assessment = String(xs.analyst_assessment);
+            }
+
+            allPages.push(xPage);
+        }
+
+        // ── GENERAL SENTIMENT PAGE ──
         if (input.sentiment_analysis) {
             const sa = input.sentiment_analysis;
 
             const sentimentPage = {
                 is_sentiment_page: true,
                 section_ref: "Sentiment Analysis",
-                section_title: String(sa.title || "Regional Sentiment Analysis"),
-                section_desc: String(sa.description || "Aggregated sentiment intelligence across monitored sources and communication channels."),
+                section_title: String(sa.title || "Multi-Source Sentiment Intelligence"),
+                section_desc: String(sa.description || "Aggregated sentiment analysis across social media, state media, diplomatic channels, and financial markets."),
                 overall_sentiment: String(sa.overall_sentiment || "Neutral"),
                 overall_sentiment_class: getSentimentOverallClass(sa.overall_sentiment),
                 overall_score: String(sa.overall_score || "0.00"),
@@ -458,6 +583,57 @@ app.post('/intelligence-report/generate', async (req, res) => {
             allPages.push(sentimentPage);
         }
 
+        // ── FIRE / THERMAL DETECTION PAGE (NASA FIRMS) ──
+        if (input.fire_detection) {
+            const fd = input.fire_detection;
+            const summary = fd.summary || {};
+
+            const firePage = {
+                is_fire_page: true,
+                section_ref: "Fire Detection",
+                section_title: String(fd.title || "NASA FIRMS Thermal Anomaly Detection"),
+                section_desc: String(fd.description || "VIIRS satellite infrared detections cross-referenced with known target coordinates. Events classified by brightness temperature and fire radiative power."),
+                summary_total: String(summary.total_detections || "0"),
+                summary_significant: String(summary.significant || "0"),
+                summary_military: String(summary.military_grade || "0"),
+                summary_timespan: String(summary.timespan || "N/A"),
+                charts: processCharts(fd.charts),
+            };
+
+            if (Array.isArray(fd.detections) && fd.detections.length > 0) {
+                firePage.detections = fd.detections.map(det => ({
+                    lat: String(det.lat || det.latitude || ""),
+                    lon: String(det.lon || det.longitude || ""),
+                    location_name: String(det.location_name || det.location || "Unknown"),
+                    bright_ti4: String(det.bright_ti4 || det.brightness || ""),
+                    frp: String(det.frp || ""),
+                    confidence: String(det.confidence || ""),
+                    acq_date: String(det.acq_date || det.date || ""),
+                    acq_time: String(det.acq_time || det.time || ""),
+                    classification: String(det.classification || "Standard"),
+                    classification_class: (det.classification || "").toLowerCase().includes("military") ? "military" :
+                                          (det.classification || "").toLowerCase().includes("significant") ? "significant" : "standard",
+                    details: det.details ? String(det.details) : undefined,
+                }));
+            }
+
+            // Heat map data for the bar chart
+            if (Array.isArray(fd.area_summary) && fd.area_summary.length > 0) {
+                firePage.area_summary = fd.area_summary.map(a => ({
+                    area: String(a.area || ""),
+                    count: String(a.count || "0"),
+                    max_frp: String(a.max_frp || "0"),
+                    assessment: String(a.assessment || ""),
+                }));
+            }
+
+            if (fd.analyst_assessment) {
+                firePage.analyst_assessment = String(fd.analyst_assessment);
+            }
+
+            allPages.push(firePage);
+        }
+
         // ── EXPLOSION DETECTION PAGE ──
         if (input.explosion_detection) {
             const ed = input.explosion_detection;
@@ -471,7 +647,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 summary_total: String(summary.total_events || "0"),
                 summary_confirmed: String(summary.confirmed || "0"),
                 summary_unconfirmed: String(summary.unconfirmed || "0"),
-                summary_timespan: String(summary.time_span || "N/A"),
+                summary_timespan: String(summary.timespan || summary.time_span || "N/A"),
                 charts: processCharts(ed.charts),
             };
 
@@ -514,7 +690,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 is_scenario_page: true,
                 section_ref: "Predictive Outlook",
                 section_title: String(input.scenario_title || "Predictive Outlook & Scenario Analysis"),
-                section_desc: String(input.scenario_desc || "Forward-looking assessment of likely developments and decision triggers."),
+                section_desc: String(input.scenario_desc || "Forward-looking assessment of likely developments, decision triggers, and inflection points."),
                 scenarios: input.scenarios.map(s => ({
                     horizon: String(s.horizon || ""),
                     most_likely: String(s.most_likely || ""),
@@ -540,11 +716,14 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 is_actions_page: true,
                 section_ref: "Priority Actions",
                 section_title: String(input.actions_title || "Priority Actions & Recommendations"),
-                section_desc: String(input.actions_desc || "Immediate and near-term actions recommended based on current intelligence."),
+                section_desc: String(input.actions_desc || "Immediate and near-term actions recommended based on current intelligence assessment."),
                 actions: input.priority_actions.map((a, i) => ({
                     num: i + 1,
                     title: String(a.title || ""),
-                    description: String(a.description || "")
+                    description: String(a.description || ""),
+                    priority: a.priority ? String(a.priority) : undefined,
+                    priority_class: (a.priority || "").toLowerCase().includes("critical") ? "critical" :
+                                    (a.priority || "").toLowerCase().includes("high") ? "high" : "moderate",
                 }))
             };
 
@@ -570,13 +749,14 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 section_ref: "References",
                 sources: input.sources.map((s, i) => ({
                     num: i + 1,
-                    text: String(typeof s === 'string' ? s : s.text || "")
+                    text: String(typeof s === 'string' ? s : s.text || ""),
+                    url: typeof s === 'object' && s.url ? String(s.url) : undefined,
                 })),
                 deliverable_note: input.deliverable_note ? String(input.deliverable_note) : undefined
             });
         }
 
-        // ── GENERIC CONTENT PAGES ──
+        // ── ADDITIONAL / APPENDIX PAGES ──
         if (Array.isArray(input.additional_pages)) {
             input.additional_pages.forEach(pg => {
                 const page = {
@@ -629,7 +809,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
             PAGES: allPages
         };
 
-        // Try to load logo — check PNG first (for the Baseera logo), then SVG
+        // Try to load logo
         const logoSearchPaths = [
             path.join(__dirname, "Intelligence Report/logo.png"),
             "/usr/src/app/Intelligence Report/logo.png",
@@ -642,11 +822,15 @@ app.post('/intelligence-report/generate', async (req, res) => {
         for (const lp of logoSearchPaths) {
             if (fs.existsSync(lp)) {
                 context.LOGO = await getImageDataUrl(lp);
+                console.log(`Logo loaded from: ${lp}`);
                 break;
             }
         }
 
-        // Allow logo override via API input (base64 data URL)
+        // Allow logo override via API input (base64 data URL or https URL)
+        if (input.logo_url) {
+            context.LOGO = String(input.logo_url);
+        }
         if (input.logo_base64) {
             context.LOGO = String(input.logo_base64);
         }
@@ -654,11 +838,10 @@ app.post('/intelligence-report/generate', async (req, res) => {
         const html = compiledTemplate(context);
         const pdfBytes = await renderDynamicPdf(html);
 
-        // Store PDF in memory and return download URL
+        // Store PDF
         const pdfId = getRandomString(16);
         pdfStore.set(pdfId, { buffer: pdfBytes, createdAt: Date.now() });
 
-        // Build download URL using the request's host
         const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
         const host = req.headers['x-forwarded-host'] || req.headers['host'];
         const basePath = process.env.BASE_PATH || '/apps/intelligence-report';
@@ -667,7 +850,8 @@ app.post('/intelligence-report/generate', async (req, res) => {
         // Cleanup session
         sessionStore.delete(sessionId);
 
-        res.json({ message: "Intelligence report generated", url });
+        console.log(`Report generated: ${pdfId} — ${allPages.length} pages`);
+        res.json({ message: "Intelligence report generated", url, pages: allPages.length });
 
     } catch (e) {
         console.error("PDF Generation Error:", e);
