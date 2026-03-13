@@ -92,6 +92,29 @@ function getEscalationHtml(value) {
     return `<span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${color};">${v}</span>`;
 }
 
+// Sanitize text: strip problematic Unicode chars that cause (cid:0) rendering
+function sanitizeText(text) {
+    if (!text) return "";
+    return String(text)
+        // Remove zero-width and invisible chars
+        .replace(/[\u200B-\u200F\u2028-\u202F\uFEFF\u00AD]/g, '')
+        // Remove private use area chars
+        .replace(/[\uE000-\uF8FF]/g, '')
+        // Remove surrogate pairs that aren't valid
+        .replace(/[\uD800-\uDFFF]/g, '')
+        // Replace em/en dashes with ASCII
+        .replace(/[\u2013\u2014]/g, '-')
+        // Replace smart quotes
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[\u201C\u201D]/g, '"')
+        // Replace bullets
+        .replace(/[\u2022\u2023\u25E6\u2043]/g, '•')
+        // Replace ellipsis
+        .replace(/\u2026/g, '...')
+        // Remove other control chars (except newlines/tabs)
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
+
 function getClassificationClass(classification) {
     const c = (classification || "").toLowerCase().replace(/[^a-z]/g, '');
     if (c.includes("topsecret")) return "top-secret";
@@ -357,14 +380,14 @@ app.post('/intelligence-report/generate', async (req, res) => {
         // ────────────────────────────────────
         // SAFE DEFAULTS
         // ────────────────────────────────────
-        const reportTitle = String(input.report_title || "Intelligence Assessment");
-        const reportSubtitle = String(input.report_subtitle || "Predictive Threat Assessment");
-        const reportDate = String(input.report_date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
-        const reportId = String(input.report_id || `IR-${Date.now().toString(36).toUpperCase()}`);
-        const classification = String(input.classification || "UNCLASSIFIED");
+        const reportTitle = sanitizeText(input.report_title || "Intelligence Assessment");
+        const reportSubtitle = sanitizeText(input.report_subtitle || "Predictive Threat Assessment");
+        const reportDate = sanitizeText(input.report_date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
+        const reportId = sanitizeText(input.report_id || `IR-${Date.now().toString(36).toUpperCase()}`);
+        const classification = sanitizeText(input.classification || "UNCLASSIFIED");
         const classificationClass = getClassificationClass(classification);
-        const updateCadence = String(input.update_cadence || "As Required");
-        const orgName = String(input.org_name || "BASEERA INTELLIGENCE");
+        const updateCadence = sanitizeText(input.update_cadence || "As Required");
+        const orgName = sanitizeText(input.org_name || "BASEERA INTELLIGENCE");
 
         // ────────────────────────────────────
         // BUILD PAGES
@@ -382,7 +405,7 @@ app.post('/intelligence-report/generate', async (req, res) => {
         const coverPage = {
             is_cover_page: true,
             section_ref: "Cover",
-            executive_summary: String(input.executive_summary || ""),
+            executive_summary: sanitizeText(input.executive_summary || ""),
             stats: coverStats.length > 0 ? coverStats : undefined,
             charts: processCharts(input.cover_charts),
         };
@@ -400,15 +423,15 @@ app.post('/intelligence-report/generate', async (req, res) => {
         // ── PAGE 2: THREAT MATRIX ──
         if (Array.isArray(input.threat_matrix) && input.threat_matrix.length > 0) {
             const threatRows = input.threat_matrix.map(t => ({
-                domain: String(t.domain || ""),
+                domain: sanitizeText(t.domain),
                 threat_badge_html: getThreatBadgeHtml(String(t.threat_level || "Moderate")),
-                vector: String(t.vector || ""),
-                status: String(t.status || ""),
-                concerns: String(t.concerns || "")
+                vector: sanitizeText(t.vector),
+                status: sanitizeText(t.status),
+                concerns: sanitizeText(t.concerns)
             }));
 
             const keyIndicators = Array.isArray(input.key_indicators) ? input.key_indicators.map(ind => ({
-                text: String(ind.text || ind),
+                text: sanitizeText(ind.text || ind),
                 indicator_class: (ind.level || "").toLowerCase().includes("critical") ? "critical-ind" :
                                  (ind.level || "").toLowerCase().includes("high") ? "high-ind" : ""
             })) : [];
@@ -416,8 +439,8 @@ app.post('/intelligence-report/generate', async (req, res) => {
             allPages.push({
                 is_threat_matrix_page: true,
                 section_ref: "Threat Assessment",
-                section_title: String(input.threat_matrix_title || "Multi-Domain Threat Matrix"),
-                section_desc: String(input.threat_matrix_desc || "Comprehensive threat assessment across all operational domains with current status and key concerns."),
+                section_title: sanitizeText(input.threat_matrix_title || "Multi-Domain Threat Matrix"),
+                section_desc: sanitizeText(input.threat_matrix_desc || "Comprehensive threat assessment across all operational domains with current status and key concerns."),
                 threat_rows: threatRows,
                 key_indicators: keyIndicators.length > 0 ? keyIndicators : undefined,
                 indicator_horizon: String(input.indicator_horizon || "72h"),
@@ -425,16 +448,41 @@ app.post('/intelligence-report/generate', async (req, res) => {
             });
         }
 
-        // ── PAGES 3-N: ANALYSIS SECTIONS (each gets its own page) ──
+        // ── PAGES 3-N: ANALYSIS SECTIONS (each gets its own page, split if too much content) ──
         const analysisSections = Array.isArray(input.analysis_sections) ? input.analysis_sections : [];
         analysisSections.forEach(section => {
+            const sectionRef = sanitizeText(section.section_ref || section.eyebrow || "Analysis");
+            const sectionEyebrow = sanitizeText(section.eyebrow || "Domain Analysis");
+            const sectionTitle = sanitizeText(section.title || "Analysis");
+            const sectionDesc = sanitizeText(section.description || "");
+
+            const allImages = Array.isArray(section.images) ? section.images.map(img => ({
+                url: String(img.url || ""),
+                caption: sanitizeText(img.caption),
+                meta: sanitizeText(img.meta),
+                type: sanitizeText(img.type)
+            })) : [];
+
+            const allVulnCards = Array.isArray(section.vulnerability_cards) ? section.vulnerability_cards.map(vc => ({
+                title: sanitizeText(vc.title),
+                threat_badge_html: getThreatBadgeHtml(String(vc.threat_level || "Moderate")),
+                image_url: vc.image_url ? String(vc.image_url) : undefined,
+                details: sanitizeText(vc.details)
+            })) : [];
+
+            // Determine if we need to split: if lots of content (images + vuln cards + text)
+            const hasText = !!section.text;
+            const hasTable = !!section.table;
+            const needsSplit = (allImages.length > 2) || (allVulnCards.length > 2) ||
+                              (allImages.length > 0 && allVulnCards.length > 0 && hasText);
+
+            // PAGE 1: Main analysis content (text, table, first 2 images, first 2 vuln cards)
             const page = {
                 is_analysis_page: true,
-                section_ref: String(section.section_ref || section.eyebrow || "Analysis"),
-                section_eyebrow: String(section.eyebrow || "Domain Analysis"),
-                section_title: String(section.title || "Analysis"),
-                section_desc: String(section.description || ""),
-                charts: processCharts(section.charts),
+                section_ref: sectionRef,
+                section_eyebrow: sectionEyebrow,
+                section_title: sectionTitle,
+                section_desc: sectionDesc,
             };
 
             if (section.assessment_confidence) {
@@ -442,65 +490,92 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 page.assessment_confidence_html = getConfidenceBadgeHtml(String(section.assessment_confidence));
             }
 
-            if (section.table) {
+            if (hasTable) {
                 page.analysis_table = {
                     headers: Array.isArray(section.table.headers) ? section.table.headers.map(String) : [],
                     rows: Array.isArray(section.table.rows) ? section.table.rows.map(row => ({
-                        cells: Array.isArray(row.cells) ? row.cells.map(cell => String(cell)) : Array.isArray(row) ? row.map(String) : []
+                        cells: Array.isArray(row.cells) ? row.cells.map(cell => sanitizeText(cell)) : Array.isArray(row) ? row.map(s => sanitizeText(s)) : []
                     })) : []
                 };
             }
 
-            if (section.text) {
-                page.analysis_text = String(section.text);
+            if (hasText) {
+                let text = sanitizeText(section.text);
+                // If page has images or vuln cards, limit text to prevent overflow
+                if (allImages.length > 0 || allVulnCards.length > 0) {
+                    text = text.length > 800 ? text.substring(0, 800) + '...' : text;
+                }
+                page.analysis_text = text;
             }
 
-            if (Array.isArray(section.images) && section.images.length > 0) {
-                page.images = section.images.map(img => ({
-                    url: String(img.url || ""),
-                    caption: String(img.caption || ""),
-                    meta: String(img.meta || ""),
-                    type: String(img.type || "")
-                }));
+            // First batch of images (max 2) and vuln cards (max 2)
+            if (allImages.length > 0) {
+                page.images = needsSplit ? allImages.slice(0, 2) : allImages;
+            }
+            if (allVulnCards.length > 0) {
+                page.vulnerability_cards = needsSplit ? allVulnCards.slice(0, 2) : allVulnCards;
             }
 
-            if (Array.isArray(section.vulnerability_cards) && section.vulnerability_cards.length > 0) {
-                page.vulnerability_cards = section.vulnerability_cards.map(vc => ({
-                    title: String(vc.title || ""),
-                    threat_badge_html: getThreatBadgeHtml(String(vc.threat_level || "Moderate")),
-                    image_url: vc.image_url ? String(vc.image_url) : undefined,
-                    details: String(vc.details || "")
-                }));
+            if (!needsSplit && section.analyst_assessment) {
+                page.analyst_assessment = sanitizeText(section.analyst_assessment);
             }
-
-            if (section.analyst_assessment) {
-                page.analyst_assessment = String(section.analyst_assessment);
+            if (!needsSplit) {
+                page.charts = processCharts(section.charts);
             }
 
             allPages.push(page);
+
+            // PAGE 2 (if split): Remaining images, vuln cards, analyst assessment, charts
+            if (needsSplit) {
+                const remainingImages = allImages.slice(2);
+                const remainingVulnCards = allVulnCards.slice(2);
+
+                if (remainingImages.length > 0 || remainingVulnCards.length > 0 || section.analyst_assessment || section.charts) {
+                    const page2 = {
+                        is_analysis_continued_page: true,
+                        section_ref: sectionRef,
+                        section_eyebrow: sectionEyebrow,
+                        section_title: sectionTitle,
+                    };
+
+                    if (remainingImages.length > 0) {
+                        page2.images = remainingImages.slice(0, 4); // max 4 images per continuation
+                    }
+                    if (remainingVulnCards.length > 0) {
+                        page2.vulnerability_cards = remainingVulnCards.slice(0, 4);
+                    }
+                    if (section.analyst_assessment) {
+                        page2.analyst_assessment = sanitizeText(section.analyst_assessment);
+                    }
+                    page2.charts = processCharts(section.charts);
+
+                    allPages.push(page2);
+                }
+            }
         });
 
-        // ── X / TWITTER SENTIMENT PAGE ──
+        // ── X / TWITTER SENTIMENT PAGE (split into 2 pages) ──
         if (input.x_sentiment) {
             const xs = input.x_sentiment;
+            const xTitle = sanitizeText(xs.title || "X (Twitter) Sentiment Analysis");
 
-            const xPage = {
+            // PAGE 1: Stats + keyword sentiment + trending hashtags
+            const xPage1 = {
                 is_x_sentiment_page: true,
                 section_ref: "X/Social Sentiment",
-                section_title: String(xs.title || "X (Twitter) Sentiment Analysis"),
-                section_desc: String(xs.description || "Real-time sentiment analysis from X/Twitter posts related to the crisis."),
+                section_title: xTitle,
+                section_desc: sanitizeText(xs.description || "Real-time sentiment analysis from X/Twitter posts related to the crisis."),
                 overall_sentiment: String(xs.overall_sentiment || "Neutral"),
                 overall_sentiment_class: getSentimentOverallClass(xs.overall_sentiment),
                 overall_score: String(xs.overall_score || "0.00"),
                 total_posts: String(xs.total_posts || "0"),
                 time_period: String(xs.time_period || "24h"),
-                charts: processCharts(xs.charts),
             };
 
-            // Sentiment breakdown by keyword/hashtag
+            // Sentiment breakdown by keyword/hashtag (max 5 to fit page)
             if (Array.isArray(xs.keyword_sentiment) && xs.keyword_sentiment.length > 0) {
-                xPage.keyword_sentiment = xs.keyword_sentiment.map(kw => ({
-                    keyword: String(kw.keyword || ""),
+                xPage1.keyword_sentiment = xs.keyword_sentiment.slice(0, 5).map(kw => ({
+                    keyword: sanitizeText(kw.keyword),
                     positive: Number(kw.positive) || 0,
                     neutral: Number(kw.neutral) || 0,
                     negative: Number(kw.negative) || 0,
@@ -508,25 +583,10 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 }));
             }
 
-            // Evidence rows — actual tweets
-            if (Array.isArray(xs.evidence_tweets) && xs.evidence_tweets.length > 0) {
-                xPage.evidence_tweets = xs.evidence_tweets.map(tw => ({
-                    username: String(tw.username || "@unknown"),
-                    handle: String(tw.handle || ""),
-                    timestamp: String(tw.timestamp || ""),
-                    text: String(tw.text || ""),
-                    sentiment: String(tw.sentiment || "Neutral"),
-                    sentiment_class: getSentimentClass(tw.sentiment),
-                    retweets: String(tw.retweets || "0"),
-                    likes: String(tw.likes || "0"),
-                    verified: tw.verified === true,
-                }));
-            }
-
-            // Trending hashtags
+            // Trending hashtags (max 6 to fit page)
             if (Array.isArray(xs.trending_hashtags) && xs.trending_hashtags.length > 0) {
-                xPage.trending_hashtags = xs.trending_hashtags.map(ht => ({
-                    hashtag: String(ht.hashtag || ""),
+                xPage1.trending_hashtags = xs.trending_hashtags.slice(0, 6).map(ht => ({
+                    hashtag: sanitizeText(ht.hashtag),
                     volume: String(ht.volume || "0"),
                     sentiment: String(ht.sentiment || "Neutral"),
                     sentiment_class: getSentimentClass(ht.sentiment),
@@ -534,11 +594,41 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 }));
             }
 
-            if (xs.analyst_assessment) {
-                xPage.analyst_assessment = String(xs.analyst_assessment);
-            }
+            allPages.push(xPage1);
 
-            allPages.push(xPage);
+            // PAGE 2: Evidence tweets + analyst assessment + charts
+            const hasTweets = Array.isArray(xs.evidence_tweets) && xs.evidence_tweets.length > 0;
+            const hasAssessment = !!xs.analyst_assessment;
+            const hasCharts = Array.isArray(xs.charts) && xs.charts.length > 0;
+
+            if (hasTweets || hasAssessment || hasCharts) {
+                const xPage2 = {
+                    is_x_evidence_page: true,
+                    section_ref: "X/Social Sentiment",
+                    section_title: xTitle,
+                    charts: processCharts(xs.charts),
+                };
+
+                if (hasTweets) {
+                    xPage2.evidence_tweets = xs.evidence_tweets.slice(0, 3).map(tw => ({
+                        username: sanitizeText(tw.username || "@unknown"),
+                        handle: sanitizeText(tw.handle),
+                        timestamp: sanitizeText(tw.timestamp),
+                        text: sanitizeText(tw.text),
+                        sentiment: String(tw.sentiment || "Neutral"),
+                        sentiment_class: getSentimentClass(tw.sentiment),
+                        retweets: String(tw.retweets || "0"),
+                        likes: String(tw.likes || "0"),
+                        verified: tw.verified === true,
+                    }));
+                }
+
+                if (hasAssessment) {
+                    xPage2.analyst_assessment = sanitizeText(xs.analyst_assessment);
+                }
+
+                allPages.push(xPage2);
+            }
         }
 
         // ── GENERAL SENTIMENT PAGE ──
@@ -548,8 +638,8 @@ app.post('/intelligence-report/generate', async (req, res) => {
             const sentimentPage = {
                 is_sentiment_page: true,
                 section_ref: "Sentiment Analysis",
-                section_title: String(sa.title || "Multi-Source Sentiment Intelligence"),
-                section_desc: String(sa.description || "Aggregated sentiment analysis across social media, state media, diplomatic channels, and financial markets."),
+                section_title: sanitizeText(sa.title || "Multi-Source Sentiment Intelligence"),
+                section_desc: sanitizeText(sa.description || "Aggregated sentiment analysis across social media, state media, diplomatic channels, and financial markets."),
                 overall_sentiment: String(sa.overall_sentiment || "Neutral"),
                 overall_sentiment_class: getSentimentOverallClass(sa.overall_sentiment),
                 overall_score: String(sa.overall_score || "0.00"),
@@ -559,18 +649,18 @@ app.post('/intelligence-report/generate', async (req, res) => {
             };
 
             if (Array.isArray(sa.categories) && sa.categories.length > 0) {
-                sentimentPage.categories = sa.categories.map(cat => ({
-                    name: String(cat.name || ""),
+                sentimentPage.categories = sa.categories.slice(0, 6).map(cat => ({
+                    name: sanitizeText(cat.name),
                     positive: Number(cat.positive) || 0,
                     neutral: Number(cat.neutral) || 0,
                     negative: Number(cat.negative) || 0,
-                    key_narrative: cat.key_narrative ? String(cat.key_narrative) : undefined,
+                    key_narrative: cat.key_narrative ? sanitizeText(cat.key_narrative) : undefined,
                 }));
             }
 
             if (Array.isArray(sa.trending_topics) && sa.trending_topics.length > 0) {
-                sentimentPage.trending_topics = sa.trending_topics.map(tt => ({
-                    topic: String(tt.topic || ""),
+                sentimentPage.trending_topics = sa.trending_topics.slice(0, 6).map(tt => ({
+                    topic: sanitizeText(tt.topic),
                     sentiment: String(tt.sentiment || "Neutral"),
                     sentiment_class: getSentimentClass(tt.sentiment),
                     volume: String(tt.volume || "0"),
@@ -578,111 +668,171 @@ app.post('/intelligence-report/generate', async (req, res) => {
             }
 
             if (sa.analyst_assessment) {
-                sentimentPage.analyst_assessment = String(sa.analyst_assessment);
+                sentimentPage.analyst_assessment = sanitizeText(sa.analyst_assessment);
             }
 
             allPages.push(sentimentPage);
         }
 
-        // ── FIRE / THERMAL DETECTION PAGE (NASA FIRMS) ──
+        // ── FIRE / THERMAL DETECTION PAGE (NASA FIRMS) — split if many detections ──
         if (input.fire_detection) {
             const fd = input.fire_detection;
             const summary = fd.summary || {};
+            const fireTitle = sanitizeText(fd.title || "NASA FIRMS Thermal Anomaly Detection");
+
+            const allDetections = Array.isArray(fd.detections) ? fd.detections.map(det => ({
+                lat: String(det.lat || det.latitude || ""),
+                lon: String(det.lon || det.longitude || ""),
+                location_name: sanitizeText(det.location_name || det.location || "Unknown"),
+                bright_ti4: String(det.bright_ti4 || det.brightness || ""),
+                frp: String(det.frp || ""),
+                confidence: String(det.confidence || ""),
+                acq_date: String(det.acq_date || det.date || ""),
+                acq_time: String(det.acq_time || det.time || ""),
+                classification: String(det.classification || "Standard"),
+                classification_class: (det.classification || "").toLowerCase().includes("military") ? "military" :
+                                      (det.classification || "").toLowerCase().includes("significant") ? "significant" : "standard",
+                details: det.details ? sanitizeText(det.details) : undefined,
+            })) : [];
+
+            const hasAreaSummary = Array.isArray(fd.area_summary) && fd.area_summary.length > 0;
+            // With area summary table, fit fewer detections on page 1
+            const maxDetectionsPage1 = hasAreaSummary ? 5 : 8;
+            const needsSplit = allDetections.length > maxDetectionsPage1;
 
             const firePage = {
                 is_fire_page: true,
                 section_ref: "Fire Detection",
-                section_title: String(fd.title || "NASA FIRMS Thermal Anomaly Detection"),
-                section_desc: String(fd.description || "VIIRS satellite infrared detections cross-referenced with known target coordinates. Events classified by brightness temperature and fire radiative power."),
+                section_title: fireTitle,
+                section_desc: sanitizeText(fd.description || "VIIRS satellite infrared detections cross-referenced with known target coordinates."),
                 summary_total: String(summary.total_detections || "0"),
                 summary_significant: String(summary.significant || "0"),
                 summary_military: String(summary.military_grade || "0"),
                 summary_timespan: String(summary.timespan || "N/A"),
-                charts: processCharts(fd.charts),
             };
 
-            if (Array.isArray(fd.detections) && fd.detections.length > 0) {
-                firePage.detections = fd.detections.map(det => ({
-                    lat: String(det.lat || det.latitude || ""),
-                    lon: String(det.lon || det.longitude || ""),
-                    location_name: String(det.location_name || det.location || "Unknown"),
-                    bright_ti4: String(det.bright_ti4 || det.brightness || ""),
-                    frp: String(det.frp || ""),
-                    confidence: String(det.confidence || ""),
-                    acq_date: String(det.acq_date || det.date || ""),
-                    acq_time: String(det.acq_time || det.time || ""),
-                    classification: String(det.classification || "Standard"),
-                    classification_class: (det.classification || "").toLowerCase().includes("military") ? "military" :
-                                          (det.classification || "").toLowerCase().includes("significant") ? "significant" : "standard",
-                    details: det.details ? String(det.details) : undefined,
-                }));
+            if (allDetections.length > 0) {
+                firePage.detections = needsSplit ? allDetections.slice(0, maxDetectionsPage1) : allDetections;
             }
 
-            // Heat map data for the bar chart
-            if (Array.isArray(fd.area_summary) && fd.area_summary.length > 0) {
+            if (hasAreaSummary) {
                 firePage.area_summary = fd.area_summary.map(a => ({
-                    area: String(a.area || ""),
+                    area: sanitizeText(a.area),
                     count: String(a.count || "0"),
                     max_frp: String(a.max_frp || "0"),
-                    assessment: String(a.assessment || ""),
+                    assessment: sanitizeText(a.assessment),
                 }));
             }
 
-            if (fd.analyst_assessment) {
-                firePage.analyst_assessment = String(fd.analyst_assessment);
+            if (!needsSplit) {
+                if (fd.analyst_assessment) firePage.analyst_assessment = sanitizeText(fd.analyst_assessment);
+                firePage.charts = processCharts(fd.charts);
             }
 
             allPages.push(firePage);
+
+            // Continuation page(s) for remaining detections
+            if (needsSplit) {
+                const remaining = allDetections.slice(maxDetectionsPage1);
+                const MAX_PER_CONT = 12; // more room on continuation pages (no summary cards)
+                for (let i = 0; i < remaining.length; i += MAX_PER_CONT) {
+                    const chunk = remaining.slice(i, i + MAX_PER_CONT);
+                    const isLastChunk = (i + MAX_PER_CONT >= remaining.length);
+
+                    const contPage = {
+                        is_fire_continued_page: true,
+                        section_ref: "Fire Detection",
+                        section_title: fireTitle,
+                        detections: chunk,
+                    };
+
+                    if (isLastChunk) {
+                        if (fd.analyst_assessment) contPage.analyst_assessment = sanitizeText(fd.analyst_assessment);
+                        contPage.charts = processCharts(fd.charts);
+                    }
+
+                    allPages.push(contPage);
+                }
+            }
         }
 
-        // ── EXPLOSION DETECTION PAGE ──
+        // ── EXPLOSION DETECTION PAGE — split if many events ──
         if (input.explosion_detection) {
             const ed = input.explosion_detection;
             const summary = ed.summary || {};
+            const explosionTitle = sanitizeText(ed.title || "Explosion / Blast Event Detection");
+
+            const allEvents = Array.isArray(ed.events) ? ed.events.map(evt => {
+                const event = {
+                    event_id: sanitizeText(evt.event_id || "EXP-???"),
+                    timestamp: sanitizeText(evt.timestamp),
+                    location: sanitizeText(evt.location || evt.location_name),
+                    magnitude: sanitizeText(evt.magnitude || "Unknown"),
+                    confidence: String(evt.confidence != null ? (typeof evt.confidence === 'number' && evt.confidence <= 1 ? (evt.confidence * 100).toFixed(0) + '%' : evt.confidence) : "N/A"),
+                    blast_radius: evt.blast_radius_m ? String(evt.blast_radius_m) + 'm' : (evt.blast_radius ? String(evt.blast_radius) : undefined),
+                    source: evt.source ? sanitizeText(evt.source) : undefined,
+                    status: String(evt.status || "Unconfirmed"),
+                    status_class: getExplosionStatusClass(evt.status),
+                    details: evt.details ? sanitizeText(evt.details) : undefined,
+                };
+
+                if (Array.isArray(evt.images) && evt.images.length > 0) {
+                    event.images = evt.images.slice(0, 2).map(img => ({
+                        url: String(img.url || ""),
+                        caption: sanitizeText(img.caption),
+                    }));
+                }
+
+                return event;
+            }) : [];
+
+            // Events with images are tall (~250px each), without images ~120px. Max 2 with images on page 1.
+            const hasImgEvents = allEvents.some(e => e.images && e.images.length > 0);
+            const maxEventsPage1 = hasImgEvents ? 2 : 3;
+            const needsSplit = allEvents.length > maxEventsPage1;
 
             const explosionPage = {
                 is_explosion_page: true,
                 section_ref: "Explosion Detection",
-                section_title: String(ed.title || "Explosion / Blast Event Detection"),
-                section_desc: String(ed.description || "Monitored blast and explosion events detected via satellite IR, seismic, and acoustic sensors."),
+                section_title: explosionTitle,
+                section_desc: sanitizeText(ed.description || "Monitored blast and explosion events detected via satellite IR, seismic, and acoustic sensors."),
                 summary_total: String(summary.total_events || "0"),
                 summary_confirmed: String(summary.confirmed || "0"),
                 summary_unconfirmed: String(summary.unconfirmed || "0"),
                 summary_timespan: String(summary.timespan || summary.time_span || "N/A"),
-                charts: processCharts(ed.charts),
+                events: needsSplit ? allEvents.slice(0, maxEventsPage1) : allEvents,
             };
 
-            if (Array.isArray(ed.events) && ed.events.length > 0) {
-                explosionPage.events = ed.events.map(evt => {
-                    const event = {
-                        event_id: String(evt.event_id || "EXP-???"),
-                        timestamp: String(evt.timestamp || ""),
-                        location: String(evt.location || evt.location_name || ""),
-                        magnitude: String(evt.magnitude || "Unknown"),
-                        confidence: String(evt.confidence != null ? (typeof evt.confidence === 'number' && evt.confidence <= 1 ? (evt.confidence * 100).toFixed(0) + '%' : evt.confidence) : "N/A"),
-                        blast_radius: evt.blast_radius_m ? String(evt.blast_radius_m) + 'm' : (evt.blast_radius ? String(evt.blast_radius) : undefined),
-                        source: evt.source ? String(evt.source) : undefined,
-                        status: String(evt.status || "Unconfirmed"),
-                        status_class: getExplosionStatusClass(evt.status),
-                        details: evt.details ? String(evt.details) : undefined,
-                    };
-
-                    if (Array.isArray(evt.images) && evt.images.length > 0) {
-                        event.images = evt.images.map(img => ({
-                            url: String(img.url || ""),
-                            caption: String(img.caption || ""),
-                        }));
-                    }
-
-                    return event;
-                });
-            }
-
-            if (ed.analyst_assessment) {
-                explosionPage.analyst_assessment = String(ed.analyst_assessment);
+            if (!needsSplit) {
+                if (ed.analyst_assessment) explosionPage.analyst_assessment = sanitizeText(ed.analyst_assessment);
+                explosionPage.charts = processCharts(ed.charts);
             }
 
             allPages.push(explosionPage);
+
+            // Continuation pages for remaining events
+            if (needsSplit) {
+                const remaining = allEvents.slice(maxEventsPage1);
+                const MAX_PER_CONT = hasImgEvents ? 3 : 4;
+                for (let i = 0; i < remaining.length; i += MAX_PER_CONT) {
+                    const chunk = remaining.slice(i, i + MAX_PER_CONT);
+                    const isLastChunk = (i + MAX_PER_CONT >= remaining.length);
+
+                    const contPage = {
+                        is_explosion_continued_page: true,
+                        section_ref: "Explosion Detection",
+                        section_title: explosionTitle,
+                        events: chunk,
+                    };
+
+                    if (isLastChunk) {
+                        if (ed.analyst_assessment) contPage.analyst_assessment = sanitizeText(ed.analyst_assessment);
+                        contPage.charts = processCharts(ed.charts);
+                    }
+
+                    allPages.push(contPage);
+                }
+            }
         }
 
         // ── SCENARIO / OUTLOOK PAGE ──
@@ -690,13 +840,13 @@ app.post('/intelligence-report/generate', async (req, res) => {
             const scenarioPage = {
                 is_scenario_page: true,
                 section_ref: "Predictive Outlook",
-                section_title: String(input.scenario_title || "Predictive Outlook & Scenario Analysis"),
-                section_desc: String(input.scenario_desc || "Forward-looking assessment of likely developments, decision triggers, and inflection points."),
+                section_title: sanitizeText(input.scenario_title || "Predictive Outlook & Scenario Analysis"),
+                section_desc: sanitizeText(input.scenario_desc || "Forward-looking assessment of likely developments, decision triggers, and inflection points."),
                 scenarios: input.scenarios.map(s => ({
-                    horizon: String(s.horizon || ""),
-                    most_likely: String(s.most_likely || ""),
+                    horizon: sanitizeText(s.horizon),
+                    most_likely: sanitizeText(s.most_likely),
                     escalation_html: getEscalationHtml(s.escalation_risk),
-                    triggers: String(s.triggers || "")
+                    triggers: sanitizeText(s.triggers)
                 })),
                 charts: processCharts(input.scenario_charts),
             };
@@ -716,12 +866,12 @@ app.post('/intelligence-report/generate', async (req, res) => {
             const actionsPage = {
                 is_actions_page: true,
                 section_ref: "Priority Actions",
-                section_title: String(input.actions_title || "Priority Actions & Recommendations"),
-                section_desc: String(input.actions_desc || "Immediate and near-term actions recommended based on current intelligence assessment."),
+                section_title: sanitizeText(input.actions_title || "Priority Actions & Recommendations"),
+                section_desc: sanitizeText(input.actions_desc || "Immediate and near-term actions recommended based on current intelligence assessment."),
                 actions: input.priority_actions.map((a, i) => ({
                     num: i + 1,
-                    title: String(a.title || ""),
-                    description: String(a.description || ""),
+                    title: sanitizeText(a.title),
+                    description: sanitizeText(a.description),
                     priority: a.priority ? String(a.priority) : undefined,
                     priority_class: (a.priority || "").toLowerCase().includes("critical") ? "critical" :
                                     (a.priority || "").toLowerCase().includes("high") ? "high" : "moderate",
@@ -729,14 +879,14 @@ app.post('/intelligence-report/generate', async (req, res) => {
             };
 
             if (input.highest_yield_action) {
-                actionsPage.highest_yield_action = String(input.highest_yield_action);
+                actionsPage.highest_yield_action = sanitizeText(input.highest_yield_action);
             }
 
             if (Array.isArray(input.data_quality) && input.data_quality.length > 0) {
                 actionsPage.data_quality = input.data_quality.map(d => ({
-                    domain: String(d.domain || ""),
+                    domain: sanitizeText(d.domain),
                     confidence_html: getConfidenceBadgeHtml(String(d.confidence || "Moderate")),
-                    notes: String(d.notes || "")
+                    notes: sanitizeText(d.notes)
                 }));
             }
 
@@ -750,10 +900,10 @@ app.post('/intelligence-report/generate', async (req, res) => {
                 section_ref: "References",
                 sources: input.sources.map((s, i) => ({
                     num: i + 1,
-                    text: String(typeof s === 'string' ? s : s.text || ""),
+                    text: sanitizeText(typeof s === 'string' ? s : s.text || ""),
                     url: typeof s === 'object' && s.url ? String(s.url) : undefined,
                 })),
-                deliverable_note: input.deliverable_note ? String(input.deliverable_note) : undefined
+                deliverable_note: input.deliverable_note ? sanitizeText(input.deliverable_note) : undefined
             });
         }
 

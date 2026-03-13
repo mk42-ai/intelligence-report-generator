@@ -1058,6 +1058,72 @@
       {{/if}}
       {{/if}}
 
+      {{!-- ══════════ X / TWITTER EVIDENCE PAGE (continuation) ══════════ --}}
+      {{#if is_x_evidence_page}}
+      <div class="card">
+        <div class="x-header">
+          <div class="x-logo">X</div>
+          <div>
+            <div class="section-eyebrow">Social Intelligence — Evidence</div>
+            <div class="section-title">{{section_title}}</div>
+          </div>
+        </div>
+
+        {{#if evidence_tweets}}
+        <div class="sub-heading">Evidence — Sample Posts</div>
+        {{#each evidence_tweets}}
+        <div class="tweet-card">
+          <div class="tweet-header">
+            <div class="tweet-user">
+              <div class="tweet-avatar">{{username.[0]}}</div>
+              <div>
+                <span class="tweet-name">{{username}}</span>
+                {{#if verified}}<span class="tweet-verified">✓</span>{{/if}}
+                <br><span class="tweet-handle">{{handle}}</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="tweet-sentiment-tag {{sentiment_class}}">{{sentiment}}</span>
+              <span class="tweet-time">{{timestamp}}</span>
+            </div>
+          </div>
+          <div class="tweet-text">{{{safe text}}}</div>
+          <div class="tweet-footer">
+            <span>RT {{retweets}}</span>
+            <span>♥ {{likes}}</span>
+          </div>
+        </div>
+        {{/each}}
+        {{/if}}
+      </div>
+
+      {{#if analyst_assessment}}
+      <div class="analyst-callout">
+        <h4>Social Sentiment Assessment</h4>
+        <p>{{{safe analyst_assessment}}}</p>
+      </div>
+      {{/if}}
+
+      {{#if charts}}
+      <div class="chart-section">
+        {{#each charts}}
+        <div class="chart-container">
+          <div class="chart-title">{{title}}</div>
+          <div class="bar-chart">
+            {{#each bars}}
+            <div class="bar-row">
+              <span class="bar-label">{{label}}</span>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
+              <span class="bar-value">{{value}}</span>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+      {{/if}}
+
       {{!-- ══════════ SENTIMENT ANALYSIS PAGE ══════════ --}}
       {{#if is_sentiment_page}}
       <div class="card">
@@ -1234,6 +1300,57 @@
       {{/if}}
       {{/if}}
 
+      {{!-- ══════════ FIRE DETECTION CONTINUED PAGE ══════════ --}}
+      {{#if is_fire_continued_page}}
+      <div class="card">
+        <div class="section-eyebrow">NASA FIRMS — Thermal Detection (Continued)</div>
+        <div class="section-title">{{section_title}}</div>
+
+        {{#if detections}}
+        <div class="sub-heading">Individual Thermal Detections (cont.)</div>
+        <div class="fire-detection-row header">
+          <span>Date/Time</span><span>Location</span><span>Brightness</span><span>FRP</span><span>Confidence</span><span>Classification</span>
+        </div>
+        {{#each detections}}
+        <div class="fire-detection-row">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-muted);">{{acq_date}}<br>{{acq_time}}</span>
+          <span style="color:var(--text);font-weight:500;">{{location_name}}</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--text-secondary);">{{bright_ti4}} K</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--high);">{{frp}} MW</span>
+          <span style="font-family:'JetBrains Mono',monospace;color:var(--text-secondary);">{{confidence}}</span>
+          <span class="fire-class {{classification_class}}">{{classification}}</span>
+        </div>
+        {{/each}}
+        {{/if}}
+      </div>
+
+      {{#if analyst_assessment}}
+      <div class="analyst-callout">
+        <h4>Thermal Analysis Note</h4>
+        <p>{{{safe analyst_assessment}}}</p>
+      </div>
+      {{/if}}
+
+      {{#if charts}}
+      <div class="chart-section">
+        {{#each charts}}
+        <div class="chart-container">
+          <div class="chart-title">{{title}}</div>
+          <div class="bar-chart">
+            {{#each bars}}
+            <div class="bar-row">
+              <span class="bar-label">{{label}}</span>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
+              <span class="bar-value">{{value}}</span>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+      {{/if}}
+
       {{!-- ══════════ EXPLOSION DETECTION PAGE ══════════ --}}
       {{#if is_explosion_page}}
       <div class="card">
@@ -1305,6 +1422,105 @@
           </div>
         </div>
         {{/each}}
+      </div>
+      {{/if}}
+      {{/if}}
+
+      {{!-- ══════════ EXPLOSION DETECTION CONTINUED PAGE ══════════ --}}
+      {{#if is_explosion_continued_page}}
+      <div class="card">
+        <div class="section-eyebrow">Blast / Explosion Detection (Continued)</div>
+        <div class="section-title">{{section_title}}</div>
+
+        {{#each events}}
+        <div class="explosion-event">
+          <div class="explosion-event-header">
+            <span class="event-id">{{event_id}}</span>
+            <span class="event-status {{status_class}}">{{status}}</span>
+          </div>
+          <div class="explosion-event-body">
+            <div class="event-field"><div class="ef-label">Timestamp</div><div class="ef-value">{{timestamp}}</div></div>
+            <div class="event-field"><div class="ef-label">Location</div><div class="ef-value">{{location}}</div></div>
+            <div class="event-field"><div class="ef-label">Magnitude</div><div class="ef-value">{{magnitude}}</div></div>
+            <div class="event-field"><div class="ef-label">Confidence</div><div class="ef-value">{{confidence}}</div></div>
+            {{#if blast_radius}}<div class="event-field"><div class="ef-label">Est. Blast Radius</div><div class="ef-value">{{blast_radius}}</div></div>{{/if}}
+            {{#if source}}<div class="event-field"><div class="ef-label">Detection Source</div><div class="ef-value">{{source}}</div></div>{{/if}}
+          </div>
+          {{#if details}}<div class="explosion-event-detail">{{details}}</div>{{/if}}
+          {{#if images}}
+          <div class="explosion-images">{{#each images}}<img src="{{url}}" alt="{{caption}}">{{/each}}</div>
+          {{/if}}
+        </div>
+        {{/each}}
+      </div>
+
+      {{#if analyst_assessment}}
+      <div class="analyst-callout">
+        <h4>Blast Analysis Note</h4>
+        <p>{{{safe analyst_assessment}}}</p>
+      </div>
+      {{/if}}
+
+      {{#if charts}}
+      <div class="chart-section">
+        {{#each charts}}
+        <div class="chart-container">
+          <div class="chart-title">{{title}}</div>
+          <div class="bar-chart">
+            {{#each bars}}
+            <div class="bar-row">
+              <span class="bar-label">{{label}}</span>
+              <div class="bar-track"><div class="bar-fill {{color}}-bar" style="width: {{percent}}%;">{{value}}</div></div>
+              <span class="bar-value">{{value}}</span>
+            </div>
+            {{/each}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+      {{/if}}
+
+      {{!-- ══════════ ANALYSIS IMAGES CONTINUED PAGE ══════════ --}}
+      {{#if is_analysis_continued_page}}
+      <div class="card">
+        <div class="section-eyebrow">{{section_eyebrow}}</div>
+        <div class="section-title">{{section_title}} (Continued)</div>
+      </div>
+
+      {{#if images}}
+      <div class="image-grid">
+        {{#each images}}
+        <div class="image-card">
+          <img src="{{url}}" alt="{{caption}}">
+          <div class="image-caption">
+            <div class="caption-title">{{caption}}</div>
+            {{#if meta}}<div class="caption-meta">{{meta}}</div>{{/if}}
+            {{#if type}}<span class="caption-type">{{type}}</span>{{/if}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      {{#if vulnerability_cards}}
+      <div class="two-col">
+        {{#each vulnerability_cards}}
+        <div class="vuln-card">
+          <div class="vuln-header"><span>{{title}}</span>{{{safe threat_badge_html}}}</div>
+          <div class="vuln-body">
+            {{#if image_url}}<img src="{{image_url}}" alt="{{title}}">{{/if}}
+            <div class="vuln-detail">{{{safe details}}}</div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+      {{/if}}
+
+      {{#if analyst_assessment}}
+      <div class="analyst-callout">
+        <h4>Analyst Assessment</h4>
+        <p>{{{safe analyst_assessment}}}</p>
       </div>
       {{/if}}
       {{/if}}
