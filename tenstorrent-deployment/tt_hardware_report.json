@@ -1,0 +1,72 @@
+{
+  "report_type": "Tenstorrent Wormhole Hardware Attestation",
+  "generated_at": "2026-03-27T17:34:39.960153",
+  "system": {
+    "hostname": "ttquietboxwormhole-SIENAD8-2L2T",
+    "os": "\"Ubuntu 22.04.5 LTS\"",
+    "kernel": "6.8.0-106-generic",
+    "cpu": "AMD EPYC 8124P 16-Core Processor",
+    "memory_total": "503Gi",
+    "memory_available": "468Gi",
+    "disk": "3.6T 2.9T 524G 85%",
+    "uptime": "up 1 day, 2 hours, 2 minutes"
+  },
+  "tenstorrent": {
+    "tt_smi_version": "4.2.0",
+    "tt_smi_raw": "N/A",
+    "device_files": "total 0\ndrwxr-xr-x  2 root root    120 Mar 26 15:32 .\ndrwxr-xr-x 20 root root   4640 Mar 26 15:32 ..\ncrw-rw-rw-  1 root root 236, 0 Mar 26 15:32 0\ncrw-rw-rw-  1 root root 236, 1 Mar 26 15:32 1\ncrw-rw-rw-  1 root root 236, 2 Mar 26 15:32 2\ncrw-rw-rw-  1 root root 236, 3 Mar 26 15:32 3",
+    "kernel_module": "tenstorrent            94208  0",
+    "pci_devices": "N/A",
+    "firmware": "\u001b[95m Saved tt-smi log to: /home/tt-quietbox-wormhole/tt_smi_logs/03-27-2026_17:34:52_results.json \u001b[0m",
+    "board_type": ""
+  },
+  "inference_proofs": [
+    {
+      "type": "health_check",
+      "data": {
+        "status": "ok",
+        "model": "qwen-0.8b-agentjson-v9ext",
+        "hardware": "tenstorrent-quietbox",
+        "backend": "huggingface"
+      }
+    },
+    {
+      "type": "model_info",
+      "data": {
+        "data": [
+          {
+            "id": "qwen-0.8b-tt",
+            "object": "model",
+            "owned_by": "airev",
+            "hardware": "tenstorrent-quietbox"
+          }
+        ]
+      }
+    },
+    {
+      "type": "inference_test",
+      "hardware": "tenstorrent-quietbox",
+      "performance": {
+        "tokens_generated": 9,
+        "time_seconds": 0.74,
+        "tokens_per_second": 12.2,
+        "prompt_tokens": 27
+      },
+      "output": "Hello! How can I help you?",
+      "wall_time": 0.74
+    },
+    {
+      "type": "tool_calling_test",
+      "hardware": "tenstorrent-quietbox",
+      "performance": {
+        "tokens_generated": 45,
+        "time_seconds": 3.33,
+        "tokens_per_second": 13.5,
+        "prompt_tokens": 89
+      },
+      "output": "{\"plugins\": [{\"name\": \"perplexity\", \"pluginId\": \"plugin-1722260873\", \"description\": \"Search the web\", \"api\": \"search\"}]}",
+      "valid_json": true,
+      "wall_time": 3.33
+    }
+  ]
+}
