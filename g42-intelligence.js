@@ -74,9 +74,9 @@ async function uploadPdfToAzure(pdfBytes) {
         },
     });
 
-    // 15-minute read-only SAS token (matches the candidate project pattern)
+    // 6-hour read-only SAS token
     const expiryDate = new Date();
-    expiryDate.setMinutes(expiryDate.getMinutes() + 15);
+    expiryDate.setHours(expiryDate.getHours() + 6);
 
     const sasToken = generateBlobSASQueryParameters({
         containerName: azContainerName,
@@ -996,7 +996,7 @@ app.post('/g42-report/generate', async (req, res) => {
             pages: allPages.length,
             pdfId: azureResult.pdfId,
             permanent: !azureResult.local,
-            urlExpiresInMinutes: azureResult.local ? null : 15,
+            urlExpiresInMinutes: azureResult.local ? null : 360,
             storageMode: azureResult.local ? "local-dev" : "azure-blob",
         });
 
