@@ -1,4 +1,11 @@
 require("dotenv").config();
+
+// Polyfill global.crypto for Node < 20 (Azure SDK v12 requires it at import time).
+// On Node 20+ this is a no-op because global.crypto already exists.
+if (typeof globalThis.crypto === "undefined") {
+    globalThis.crypto = require("crypto").webcrypto;
+}
+
 const express = require("express");
 const path = require("path");
 const Handlebars = require("handlebars");
