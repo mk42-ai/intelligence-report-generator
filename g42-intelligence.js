@@ -932,7 +932,8 @@ app.post('/g42-report/generate', async (req, res) => {
     }
 });
 
-const PORT = process.env.G42_PORT || 3001;
+// OnDemand serverless sets PORT; fall back to G42_PORT or 3001 for local dev.
+const PORT = process.env.PORT || process.env.G42_PORT || 3001;
 app.listen(PORT, () => {
     console.log(`G42 Daily Media Intelligence Server running on port ${PORT}`);
     console.log(`PDF storage (permanent): ${PDF_STORAGE_DIR}`);
