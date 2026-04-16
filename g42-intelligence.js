@@ -77,7 +77,9 @@ async function uploadPdfToAzure(pdfBytes) {
     await blockBlobClient.uploadData(pdfBytes, {
         blobHTTPHeaders: {
             blobContentType: 'application/pdf',
-            blobContentDisposition: `inline; filename="g42-intel-${pdfId}.pdf"`,
+            // attachment forces browser to download instead of rendering inline.
+            // Filename includes the date so downloads are self-describing.
+            blobContentDisposition: `attachment; filename="G42-Media-Intelligence-${pdfId}.pdf"`,
         },
     });
 
@@ -258,6 +260,28 @@ function computeSentimentSummary(positive, neutral, negative) {
     };
 }
 
+// Validate and clean a URL. Returns undefined if the URL looks malformed.
+// Catches agent-side bugs: trailing ellipses, truncated URLs, non-http schemes,
+// obvious tweet-as-article substitutions (stories mislabeled as Tier-1 but pointing to x.com).
+function cleanUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') return undefined;
+    let u = rawUrl.trim();
+    // Strip trailing ellipsis characters (agent truncation artifact)
+    u = u.replace(/[\u2026]+$/g, '').replace(/\.{3,}$/g, '');
+    // Strip trailing whitespace / quotes
+    u = u.replace(/[\s"'`]+$/g, '');
+    // Must be http or https
+    if (!/^https?:\/\//i.test(u)) return undefined;
+    // Try to parse — reject if URL constructor fails
+    try {
+        const parsed = new URL(u);
+        if (!parsed.hostname || parsed.hostname.length < 3) return undefined;
+        return parsed.toString();
+    } catch {
+        return undefined;
+    }
+}
+
 function processMention(m) {
     const source = sanitizeText(m.source || m.outlet || "Source");
     const icon = getSourceIcon(source);
@@ -267,7 +291,7 @@ function processMention(m) {
         source_icon_svg: icon.svg,
         title: sanitizeText(m.title || m.headline || ""),
         snippet: sanitizeText(m.snippet || m.summary || ""),
-        url: m.url ? String(m.url) : undefined,
+        url: cleanUrl(m.url),
         timestamp: sanitizeText(m.timestamp || m.time || m.date || ""),
         sentiment: sanitizeText(m.sentiment || "Neutral"),
         sentiment_class: getSentimentClass(m.sentiment),
@@ -285,10 +309,11 @@ function processPost(p) {
     if (p.views != null) metrics.push({ icon_svg: ICONS.view, value: String(p.views), label: 'views' });
     if (p.shares != null) metrics.push({ icon_svg: ICONS.share, value: String(p.shares), label: 'shares' });
 
+    const cleanedUrl = cleanUrl(p.url);
     let urlDisplay = "";
-    if (p.url) {
-        try { urlDisplay = new URL(p.url).hostname.replace('www.', ''); }
-        catch { urlDisplay = String(p.url).substring(0, 30); }
+    if (cleanedUrl) {
+        try { urlDisplay = new URL(cleanedUrl).hostname.replace('www.', ''); }
+        catch { urlDisplay = cleanedUrl.substring(0, 30); }
     }
 
     return {
@@ -301,7 +326,7 @@ function processPost(p) {
         timestamp: sanitizeText(p.timestamp || p.time || ""),
         content_html: sanitizeText(p.content || p.text || ""),
         metrics,
-        url: p.url ? String(p.url) : undefined,
+        url: cleanedUrl,
         url_display: urlDisplay,
         sentiment: sanitizeText(p.sentiment || "Neutral"),
         sentiment_class: getSentimentClass(p.sentiment),
@@ -322,7 +347,7 @@ function processDigestMention(m) {
         outlet_icon_class: icon.class,
         outlet_icon_svg: icon.svg,
         title: sanitizeText(m.title || m.headline || ""),
-        url: m.url ? String(m.url) : undefined,
+        url: cleanUrl(m.url),
         date: sanitizeText(m.date || m.publication_date || m.timestamp || ""),
         context: m.context ? sanitizeText(m.context) : (m.note ? sanitizeText(m.note) : undefined),
     };
@@ -956,6 +981,16 @@ app.post('/g42-report/generate', async (req, res) => {
         });
 
         // Context
+        // Load the official G42 logo PNG from the repo, encode as data URI for inline rendering.
+        // File lives next to the template at G42 Report/g42-logo.png (18 KB, 382×290, sourced from g42.ai).
+        let g42LogoDataUri = "";
+        try {
+            const logoBytes = fs.readFileSync(path.join(__dirname, 'G42 Report/g42-logo.png'));
+            g42LogoDataUri = `data:image/png;base64,${logoBytes.toString('base64')}`;
+        } catch (e) {
+            console.warn("G42 logo not found at G42 Report/g42-logo.png — falling back to text wordmark");
+        }
+
         const context = {
             REPORT_TITLE: reportTitle,
             REPORT_SUBTITLE: reportSubtitle,
@@ -967,6 +1002,7 @@ app.post('/g42-report/generate', async (req, res) => {
             PUBLISHED_AT: publishedAt,
             ANALYST: analyst,
             ORG_NAME: orgName,
+            G42_LOGO: g42LogoDataUri,
             PAGES: allPages,
         };
 

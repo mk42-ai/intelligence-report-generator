@@ -144,11 +144,19 @@
       -webkit-print-color-adjust: exact; print-color-adjust: exact;
     }
 
-    /* ═══ G42 OFFICIAL WORDMARK (permanently embedded, plain HTML text) ═══ */
+    /* ═══ G42 OFFICIAL LOGO (embedded PNG, sourced from g42.ai) ═══ */
     .g42-logo {
       display: flex; align-items: center; gap: 14px;
     }
+    .g42-logo-mark {
+      height: 38px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
     .g42-wordmark {
+      /* Fallback when PNG is missing */
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 32px;
       font-weight: 900;
@@ -615,10 +623,15 @@
       font-size: 7.5px; color: var(--text-muted);
       font-weight: 500;
       letter-spacing: 0.2px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      max-width: 300px;
+      /* Allow URLs to wrap naturally instead of truncating with ellipsis.
+         Analysts need the full URL visible to audit source authenticity. */
+      white-space: normal;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+      max-width: 460px;
       margin-left: 4px;
       text-transform: none;
+      line-height: 1.35;
     }
 
     .mention-engagement {
@@ -952,8 +965,11 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 8px; color: var(--g42-teal-deep);
       text-decoration: none;
-      max-width: 240px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 320px;
+      white-space: normal;
+      word-break: break-all;
+      overflow-wrap: anywhere;
+      line-height: 1.3;
     }
 
     /* ═══ PORTFOLIO GRID ═══ */
@@ -1306,15 +1322,18 @@
   <div class="page-container">
     {{#each PAGES}}
     <div class="page-wrapper">
-      <!-- BRAND BAR — G42 wordmark permanently embedded (every page) -->
+      <!-- BRAND BAR — G42 official logo permanently embedded (every page) -->
       <div class="page-brand-bar">
         <div class="g42-logo">
-          <!-- G42 official wordmark: plain HTML text, renders reliably everywhere -->
-          <div class="g42-wordmark">G42</div>
+          {{#if @root.G42_LOGO}}
+            <img class="g42-logo-mark" src="{{@root.G42_LOGO}}" alt="G42" />
+          {{else}}
+            <div class="g42-wordmark">G42</div>
+          {{/if}}
           <div class="g42-logo-divider"></div>
           <div class="g42-logo-tagline">
             <div class="g42-logo-tagline-top">Intelligence</div>
-            <div class="g42-logo-tagline-bot">Daily Media Brief</div>
+            <div class="g42-logo-tagline-bot">Media Brief</div>
           </div>
         </div>
         <div class="brand-bar-right">
