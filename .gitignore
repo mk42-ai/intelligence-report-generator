@@ -4,3 +4,6 @@ debug_*.html
 debug_*.png
 .env
 .DS_Store
+
+# G42 report runtime storage (PDFs + debug HTML)
+pdf-storage/

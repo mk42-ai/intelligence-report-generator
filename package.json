@@ -5,7 +5,9 @@
   "main": "intelligence.js",
   "scripts": {
     "start": "node intelligence.js",
-    "test": "node test-intelligence.js"
+    "test": "node test-intelligence.js",
+    "start:g42": "node g42-intelligence.js",
+    "test:g42": "node test-g42.js"
   },
   "dependencies": {
     "body-parser": "^1.20.4",
