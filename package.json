@@ -10,6 +10,7 @@
     "test:g42": "node test-g42.js"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.31.0",
     "body-parser": "^1.20.4",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",

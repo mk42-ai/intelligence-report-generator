@@ -6,13 +6,29 @@ const bodyParser = require("body-parser");
 const app = express();
 const puppeteer = require("puppeteer");
 const fs = require("fs");
+const {
+    BlobServiceClient,
+    StorageSharedKeyCredential,
+    generateBlobSASQueryParameters,
+    BlobSASPermissions,
+} = require("@azure/storage-blob");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ limit: "50mb" }));
 
 // ---------------------------------------------------------
-// PERMANENT PDF STORE (on-disk, no TTL expiration)
+// AZURE BLOB STORAGE — permanent PDF persistence
+// Set these 3 env vars on the OnDemand endpoint:
+//   AZURE_STORAGE_ACCOUNT_NAME
+//   AZURE_STORAGE_ACCOUNT_KEY
+//   AZURE_STORAGE_CONTAINER_NAME
+// If unset, falls back to local disk (dev only — ephemeral on serverless).
 // ---------------------------------------------------------
+const azAccountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY || "mock-key";
+const azAccountName = process.env.AZURE_STORAGE_ACCOUNT_NAME || "mock-name";
+const azContainerName = process.env.AZURE_STORAGE_CONTAINER_NAME || "mock-container";
+
+// Local-disk fallback only for dev (container restarts wipe this on serverless)
 const PDF_STORAGE_DIR = path.join(__dirname, 'pdf-storage');
 if (!fs.existsSync(PDF_STORAGE_DIR)) fs.mkdirSync(PDF_STORAGE_DIR, { recursive: true });
 
@@ -25,22 +41,74 @@ function getRandomString(length = 16) {
     return result;
 }
 
-function savePdfPermanent(buffer) {
+// Upload PDF bytes to Azure Blob Storage, return a 15-minute pre-signed SAS URL.
+// Falls back to local disk save + local download URL when no Azure creds set.
+async function uploadPdfToAzure(pdfBytes) {
+    // Dev fallback: no Azure creds -> write to local disk
+    if (azAccountName === "mock-name") {
+        const pdfId = getRandomString(16);
+        const filePath = path.join(PDF_STORAGE_DIR, `${pdfId}.pdf`);
+        fs.writeFileSync(filePath, pdfBytes);
+        console.log(`[dev] Azure creds not set — saved locally: ${filePath}`);
+        return { url: null, pdfId, local: true };
+    }
+
+    const sharedKeyCredential = new StorageSharedKeyCredential(azAccountName, azAccountKey);
+    const blobServiceClient = new BlobServiceClient(
+        `https://${azAccountName}.blob.core.windows.net`,
+        sharedKeyCredential
+    );
+    const containerClient = blobServiceClient.getContainerClient(azContainerName);
+
+    if (!(await containerClient.exists())) {
+        throw new Error(`Azure container '${azContainerName}' does not exist`);
+    }
+
     const pdfId = getRandomString(16);
-    const filePath = path.join(PDF_STORAGE_DIR, `${pdfId}.pdf`);
-    fs.writeFileSync(filePath, buffer);
-    return pdfId;
+    const blobName = `g42-report-${pdfId}.pdf`;
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    await blockBlobClient.uploadData(pdfBytes, {
+        blobHTTPHeaders: {
+            blobContentType: 'application/pdf',
+            blobContentDisposition: `inline; filename="g42-intel-${pdfId}.pdf"`,
+        },
+    });
+
+    // 15-minute read-only SAS token (matches the candidate project pattern)
+    const expiryDate = new Date();
+    expiryDate.setMinutes(expiryDate.getMinutes() + 15);
+
+    const sasToken = generateBlobSASQueryParameters({
+        containerName: azContainerName,
+        blobName,
+        permissions: BlobSASPermissions.parse("r"),
+        startsOn: new Date(),
+        expiresOn: expiryDate,
+    }, sharedKeyCredential).toString();
+
+    const url = `${blockBlobClient.url}?${sasToken}`;
+    return { url, pdfId, blobName, local: false };
 }
 
+// Local-disk download fallback for dev mode. In production (Azure mode),
+// the /generate response returns a direct Azure SAS URL — this route just serves
+// local dev PDFs.
 app.get('/g42-report/download/:id', (req, res) => {
     const filePath = path.join(PDF_STORAGE_DIR, `${req.params.id}.pdf`);
-    if (!fs.existsSync(filePath)) return res.status(404).json({ error: "PDF not found" });
+    if (!fs.existsSync(filePath)) return res.status(404).json({ error: "PDF not found (Azure mode: use the SAS URL from /generate)" });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="g42-intel-${req.params.id}.pdf"`);
     res.send(fs.readFileSync(filePath));
 });
 
+// List local dev PDFs (Azure-mode storage is listed via Azure portal or Storage API directly)
 app.get('/g42-report/list', (req, res) => {
+    if (azAccountName !== "mock-name") {
+        return res.json({
+            message: "Azure mode active — PDFs stored in container '" + azContainerName + "'. Use Azure portal or Storage SDK to list.",
+            azureContainer: azContainerName,
+        });
+    }
     const files = fs.readdirSync(PDF_STORAGE_DIR)
         .filter(f => f.endsWith('.pdf'))
         .map(f => {
@@ -52,7 +120,7 @@ app.get('/g42-report/list', (req, res) => {
             };
         })
         .sort((a, b) => b.created - a.created);
-    res.json({ count: files.length, reports: files });
+    res.json({ count: files.length, reports: files, mode: "local-dev" });
 });
 
 // ---------------------------------------------------------
@@ -907,23 +975,29 @@ app.post('/g42-report/generate', async (req, res) => {
         }
         const pdfBytes = await renderDynamicPdf(html);
 
-        // Save permanent
-        const pdfId = savePdfPermanent(pdfBytes);
+        // Upload to Azure Blob Storage (15-minute SAS URL) — permanent persistence
+        const azureResult = await uploadPdfToAzure(pdfBytes);
 
-        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-        const host = req.headers['x-forwarded-host'] || req.headers['host'];
-        const basePath = process.env.BASE_PATH || '';
-        const url = `${protocol}://${host}${basePath}/g42-report/download/${pdfId}`;
+        let url = azureResult.url;
+        // Local-dev fallback: build the local download URL
+        if (azureResult.local) {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+            const host = req.headers['x-forwarded-host'] || req.headers['host'];
+            const basePath = process.env.BASE_PATH || '';
+            url = `${protocol}://${host}${basePath}/g42-report/download/${azureResult.pdfId}`;
+        }
 
         sessionStore.delete(sessionId);
 
-        console.log(`G42 report generated: ${pdfId} — ${allPages.length} pages`);
+        console.log(`G42 report generated: ${azureResult.pdfId} — ${allPages.length} pages — ${azureResult.local ? 'local-dev' : 'azure blob'}`);
         res.json({
             message: "G42 intelligence report generated",
             url,
             pages: allPages.length,
-            pdfId,
-            permanent: true,
+            pdfId: azureResult.pdfId,
+            permanent: !azureResult.local,
+            urlExpiresInMinutes: azureResult.local ? null : 15,
+            storageMode: azureResult.local ? "local-dev" : "azure-blob",
         });
 
     } catch (e) {
