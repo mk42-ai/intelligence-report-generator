@@ -260,6 +260,43 @@ function computeSentimentSummary(positive, neutral, negative) {
     };
 }
 
+// Fetch an image URL and return a base64 data URI. Returns null on failure.
+// This makes the PDF robust against CORS, hotlink blocks, and rate-limiting at render time —
+// once the server has the bytes, Puppeteer renders from inline data with zero network deps.
+async function fetchAndInlineImage(url, timeoutMs = 12000) {
+    if (!url || typeof url !== 'string') return null;
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const res = await fetch(url, {
+            signal: controller.signal,
+            headers: {
+                // Pose as a regular browser so CDN/hotlink filters don't reject
+                'User-Agent': 'Mozilla/5.0 (G42IntelBot/1.0; +https://g42.ai)',
+                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            },
+        });
+        clearTimeout(timer);
+        if (!res.ok) {
+            console.warn(`Image fetch ${res.status}: ${url.substring(0, 80)}`);
+            return null;
+        }
+        const ct = res.headers.get('content-type') || 'image/jpeg';
+        // Size guard — skip anything > 5 MB (unreasonable for a report image)
+        const len = parseInt(res.headers.get('content-length') || '0', 10);
+        if (len > 5 * 1024 * 1024) {
+            console.warn(`Image too large (${len} bytes): ${url.substring(0, 80)}`);
+            return null;
+        }
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.length > 5 * 1024 * 1024) return null;
+        return `data:${ct};base64,${buf.toString('base64')}`;
+    } catch (e) {
+        console.warn(`Image fetch failed (${e.name}): ${url.substring(0, 80)}`);
+        return null;
+    }
+}
+
 // Validate and clean a URL. Returns undefined if the URL looks malformed.
 // Catches agent-side bugs: trailing ellipses, truncated URLs, non-http schemes,
 // obvious tweet-as-article substitutions (stories mislabeled as Tier-1 but pointing to x.com).
@@ -801,6 +838,53 @@ app.post('/g42-report/generate', async (req, res) => {
                 }
             }
         });
+
+        // ══════════ FEATURED IMAGERY PAGE (magazine-style 5-image grid) ══════════
+        // Agent pulls image URLs + captions + outlet attribution from Perplexity search
+        // results. Up to 5 images: 1 featured hero + 2×2 grid.
+        // Server pre-fetches each image and inlines as base64 data URI so the PDF is
+        // robust against hotlink blocks, CORS, rate-limiting, and broken sources.
+        // Shape: { title, description, images: [{ url, caption, outlet, date, source_url }] }
+        {
+            const data = input.featured_imagery;
+            if (data && Array.isArray(data.images) && data.images.length > 0) {
+                // Only take first 5 images, pre-fetch in parallel
+                const rawImages = data.images.slice(0, 5);
+                console.log(`Pre-fetching ${rawImages.length} imagery URLs in parallel...`);
+                const fetchedImages = await Promise.all(
+                    rawImages.map(async (img) => {
+                        const cleanOriginal = cleanUrl(img.url);
+                        const inlined = cleanOriginal ? await fetchAndInlineImage(cleanOriginal) : null;
+                        return {
+                            url: inlined,  // null if fetch failed
+                            original_url: cleanOriginal,
+                            caption: sanitizeText(img.caption || img.alt || ""),
+                            outlet: sanitizeText(img.outlet || img.source || ""),
+                            date: sanitizeText(img.date || img.timestamp || ""),
+                            source_url: cleanUrl(img.source_url || img.article_url) || cleanOriginal,
+                            meta: sanitizeText(img.meta || ""),
+                        };
+                    })
+                );
+                // Drop images that couldn't be fetched
+                const validImages = fetchedImages.filter(i => i.url);
+                console.log(`  ${validImages.length}/${rawImages.length} images successfully inlined`);
+
+                const featured = validImages[0];
+                const gridImages = validImages.slice(1, 5); // up to 4 for 2x2 grid
+
+                if (featured || gridImages.length > 0) {
+                    allPages.push({
+                        is_imagery_page: true,
+                        section_ref: "Imagery",
+                        imagery_title: sanitizeText(data.title || "Featured Visual Coverage"),
+                        imagery_desc: sanitizeText(data.description || "Key images drawn from Perplexity-retrieved Tier-1 editorial sources across the coverage window."),
+                        featured_image: featured,
+                        grid_images: gridImages.length > 0 ? gridImages : undefined,
+                    });
+                }
+            }
+        }
 
         // ══════════ AI & POLICY LEADERS (agency-style digest) ══════════
         // External AI figures and policy leaders tracked by name: Jensen Huang, Demis Hassabis,

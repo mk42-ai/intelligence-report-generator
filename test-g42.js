@@ -603,6 +603,55 @@ const reportData = {
         ],
     },
 
+    // ═══════════════════════════════════════════════════════════════════
+    // FEATURED IMAGERY — visual coverage drawn from Perplexity sources
+    // ═══════════════════════════════════════════════════════════════════
+    // Agent extracts image URLs + captions + outlet attribution from Perplexity
+    // search results. First image becomes the hero; next 4 fill a 2×2 grid below.
+    // Using Wikimedia Commons images for reliable demo rendering.
+    featured_imagery: {
+        title: "Featured Visual Coverage",
+        description: "Key images drawn from Perplexity-retrieved Tier-1 editorial sources across the 7-day coverage window.",
+        images: [
+            {
+                url: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=1200&auto=format&fit=crop&q=75",
+                caption: "Abu Dhabi skyline — G42 announces Cisco-backed AI cluster expansion",
+                outlet: "Reuters",
+                date: "April 14, 2026",
+                meta: "~1.2M impressions · Tier 1",
+                source_url: "https://reuters.com/technology/uae-g42-cisco-expansion-2026-04-14",
+            },
+            {
+                url: "https://images.unsplash.com/photo-1591808216268-ce0b82787efe?w=960&auto=format&fit=crop&q=75",
+                caption: "AMD MI350X GPUs deployed in G42's Regulated Technology Environment",
+                outlet: "Bloomberg",
+                date: "April 13, 2026",
+                source_url: "https://bloomberg.com/news/articles/2026-04-13/amd-g42-mi350x",
+            },
+            {
+                url: "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?w=960&auto=format&fit=crop&q=75",
+                caption: "Cisco powers G42 end-to-end AI infrastructure under US-UAE partnership",
+                outlet: "Cisco IR",
+                date: "April 13, 2026",
+                source_url: "https://investor.cisco.com/news/news-details/2026/Cisco-G42-Partnership",
+            },
+            {
+                url: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=960&auto=format&fit=crop&q=75",
+                caption: "Cerebras 8-exaflop compute arrives in India via G42 partnership",
+                outlet: "Yahoo Finance",
+                date: "April 12, 2026",
+                source_url: "https://finance.yahoo.com/news/uae-g42-teams-cerebras-india-deploy",
+            },
+            {
+                url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=960&auto=format&fit=crop&q=75",
+                caption: "Sheikh Tahnoon's IHC acquires majority stake in The Ivy hospitality group",
+                outlet: "Financial Times",
+                date: "April 14, 2026",
+                source_url: "https://ft.com/content/ihc-richard-caring-ivy-acquisition-2026",
+            },
+        ],
+    },
+
     sources: [
         { title: "Reuters", text: "UAE's Sheikh Tahnoon pledges sovereign-AI push, deeper US ties at Abu Dhabi summit", url: "https://reuters.com/technology/uae-sheikh-tahnoon-sovereign-ai-summit-2026-04-16" },
         { title: "Bloomberg", text: "Sheikh Tahnoon Outlines G42's Next Phase as UAE's AI Ambitions Crystallize", url: "https://bloomberg.com/news/articles/2026-04-16/uae-g42-sheikh-tahnoon-ai-summit" },
